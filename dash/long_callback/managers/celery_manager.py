@@ -152,7 +152,7 @@ def _make_job_fn(fn, celery_app, progress, key):
                 else:
                     user_callback_output = fn(*maybe_progress, user_callback_args)
             except PreventUpdate:
-                # Put NoUpdate dict directly to avoid circular imports.
+                # Put NoUpdateType dict directly to avoid circular imports.
                 cache.set(
                     result_key,
                     json.dumps(

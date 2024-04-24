@@ -187,7 +187,7 @@ def _get_traceback(secret, error: Exception):
 
 
 # Singleton signal to not update an output, alternative to PreventUpdate
-no_update = _callback.NoUpdate()  # pylint: disable=protected-access
+no_update = _callback.NoUpdateType()  # pylint: disable=protected-access
 
 
 # pylint: disable=too-many-instance-attributes

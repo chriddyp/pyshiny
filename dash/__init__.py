@@ -19,7 +19,7 @@ from . import html  # noqa: F401,E402
 from . import dash_table  # noqa: F401,E402
 from .version import __version__  # noqa: F401,E402
 from ._callback_context import callback_context  # noqa: F401,E402
-from ._callback import callback, clientside_callback  # noqa: F401,E402
+from ._callback import callback, clientside_callback, NoUpdateType  # noqa: F401,E402
 from ._get_app import get_app  # noqa: F401,E402
 from ._get_paths import (  # noqa: F401,E402
     get_asset_url,

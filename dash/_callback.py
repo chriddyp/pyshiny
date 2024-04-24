@@ -39,13 +39,13 @@ def _invoke_callback(func, *args, **kwargs):  # used to mark the frame for the d
     return func(*args, **kwargs)  # %% callback invoked %%
 
 
-class NoUpdate:
+class NoUpdateType:
     def to_plotly_json(self):  # pylint: disable=no-self-use
         return {"_dash_no_update": "_dash_no_update"}
 
     @staticmethod
     def is_no_update(obj):
-        return isinstance(obj, NoUpdate) or (
+        return isinstance(obj, NoUpdateType) or (
             isinstance(obj, dict) and obj == {"_dash_no_update": "_dash_no_update"}
         )
 
@@ -423,7 +423,7 @@ def register_callback(  # pylint: disable=R0914
                 job_running = callback_manager.job_running(job_id)
                 if not job_running and output_value is callback_manager.UNDEFINED:
                     # Job canceled -> no output to close the loop.
-                    output_value = NoUpdate()
+                    output_value = NoUpdateType()
 
                 elif (
                     isinstance(output_value, dict)
@@ -440,7 +440,7 @@ def register_callback(  # pylint: disable=R0914
 
                 if multi and isinstance(output_value, (list, tuple)):
                     output_value = [
-                        NoUpdate() if NoUpdate.is_no_update(r) else r
+                        NoUpdateType() if NoUpdateType.is_no_update(r) else r
                         for r in output_value
                     ]
 
@@ -449,7 +449,7 @@ def register_callback(  # pylint: disable=R0914
             else:
                 output_value = _invoke_callback(func, *func_args, **func_kwargs)
 
-            if NoUpdate.is_no_update(output_value):
+            if NoUpdateType.is_no_update(output_value):
                 raise PreventUpdate
 
             if not multi:
@@ -471,12 +471,12 @@ def register_callback(  # pylint: disable=R0914
             component_ids = collections.defaultdict(dict)
             has_update = False
             for val, spec in zip(flat_output_values, output_spec):
-                if isinstance(val, NoUpdate):
+                if isinstance(val, NoUpdateType):
                     continue
                 for vali, speci in (
                     zip(val, spec) if isinstance(spec, list) else [[val, spec]]
                 ):
-                    if not isinstance(vali, NoUpdate):
+                    if not isinstance(vali, NoUpdateType):
                         has_update = True
                         id_str = stringify_id(speci["id"])
                         prop = clean_property_name(speci["property"])
