@@ -246,6 +246,12 @@ class Dash:
         to sensitive files.
     :type assets_ignore: string
 
+    :param assets_path_ignore: A list of regex, each regex as a string to pass to ``re.compile``, for
+        assets path to omit from immediate loading. The files in these ignored paths will still be
+        served if specifically requested. You cannot use this to prevent access
+        to sensitive files.
+    :type assets_path_ignore: list of strings
+
     :param assets_external_path: an absolute URL from which to load assets.
         Use with ``serve_locally=False``. assets_external_path is joined
         with assets_url_path to determine the absolute url to the
@@ -391,6 +397,7 @@ class Dash:
         use_pages: Optional[bool] = None,
         assets_url_path: str = "assets",
         assets_ignore: str = "",
+        assets_path_ignore: List[str] = None,
         assets_external_path: Optional[str] = None,
         eager_loading: bool = False,
         include_assets_files: bool = True,
@@ -451,6 +458,7 @@ class Dash:
             ),  # type: ignore
             assets_url_path=assets_url_path,
             assets_ignore=assets_ignore,
+            assets_path_ignore=assets_path_ignore,
             assets_external_path=get_combined_config(
                 "assets_external_path", assets_external_path, ""
             ),
@@ -730,7 +738,6 @@ class Dash:
             and not self.validation_layout
             and not self.config.suppress_callback_exceptions
         ):
-
             layout_value = self._layout_value()
             _validate.validate_layout(value, layout_value)
             self.validation_layout = layout_value
@@ -1467,11 +1474,18 @@ class Dash:
         walk_dir = self.config.assets_folder
         slash_splitter = re.compile(r"[\\/]+")
         ignore_str = self.config.assets_ignore
+        ignore_path_list = self.config.assets_path_ignore
         ignore_filter = re.compile(ignore_str) if ignore_str else None
+        ignore_path_filters = [
+            re.compile(ignore_path)
+            for ignore_path in (ignore_path_list or [])
+            if ignore_path
+        ]
 
         for current, _, files in sorted(os.walk(walk_dir)):
             if current == walk_dir:
                 base = ""
+                s = ""
             else:
                 s = current.replace(walk_dir, "").lstrip("\\").lstrip("/")
                 splitted = slash_splitter.split(s)
@@ -1480,22 +1494,32 @@ class Dash:
                 else:
                     base = splitted[0]
 
-            if ignore_filter:
-                files_gen = (x for x in files if not ignore_filter.search(x))
+            # Check if any level of current path matches ignore path
+            if s and any(
+                ignore_path_filter.search(x)
+                for ignore_path_filter in ignore_path_filters
+                for x in s.split(os.path.sep)
+            ):
+                pass
             else:
-                files_gen = files
+                if ignore_filter:
+                    files_gen = (x for x in files if not ignore_filter.search(x))
+                else:
+                    files_gen = files
 
-            for f in sorted(files_gen):
-                path = "/".join([base, f]) if base else f
+                for f in sorted(files_gen):
+                    path = "/".join([base, f]) if base else f
 
-                full = os.path.join(current, f)
+                    full = os.path.join(current, f)
 
-                if f.endswith("js"):
-                    self.scripts.append_script(self._add_assets_resource(path, full))
-                elif f.endswith("css"):
-                    self.css.append_css(self._add_assets_resource(path, full))
-                elif f == "favicon.ico":
-                    self._favicon = path
+                    if f.endswith("js"):
+                        self.scripts.append_script(
+                            self._add_assets_resource(path, full)
+                        )
+                    elif f.endswith("css"):
+                        self.css.append_css(self._add_assets_resource(path, full))
+                    elif f == "favicon.ico":
+                        self._favicon = path
 
     @staticmethod
     def _invalid_resources_handler(err):
