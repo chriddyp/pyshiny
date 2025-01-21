@@ -999,10 +999,12 @@ class Dash:
             path_in_pkg,
             package.__path__,
         )
-
-        response = flask.Response(
-            pkgutil.get_data(package_name, path_in_pkg), mimetype=mimetype
-        )
+        
+        try:
+            data = pkgutil.get_data(package_name, path_in_pkg)
+        except FileNotFoundError:
+            flask.abort(404)
+        response = flask.Response(data, mimetype=mimetype)
 
         if has_fingerprint:
             # Fingerprinted resources are good forever (1 year)
