@@ -25,7 +25,7 @@ function help() {
     console.error('usage: ');
     console.error(
         'extract-meta ^fileIgnorePattern ^forbidden$|^props$|^patterns$' +
-            ' path/to/component(s) [path/to/more/component(s) ...] > metadata.json'
+        ' path/to/component(s) [path/to/more/component(s) ...] > metadata.json'
     );
 }
 
@@ -98,7 +98,7 @@ function isReservedPropName(propName) {
         if (reservedPattern.test(propName)) {
             process.stderr.write(
                 `\nERROR: "${propName}" matches reserved word ` +
-                    `pattern: ${reservedPattern.toString()}\n`
+                `pattern: ${reservedPattern.toString()}\n`
             );
             failedBuild = true;
         }
@@ -118,9 +118,15 @@ function checkDocstring(name, value) {
 function docstringWarning(doc) {
     checkDocstring(doc.displayName, doc.description);
 
-    Object.entries(doc.props || {}).forEach(([name, p]) =>
-        checkDocstring(`${doc.displayName}.${name}`, p.description)
-    );
+    const exportedDisplayName = doc.exportedName || doc.displayName
+    if (doc && doc.props) {
+        Object.entries(doc.props || {}).forEach(([name, p]) =>
+            checkDocstring(`${exportedDisplayName}.${name}`, p.description)
+        );
+    } else {
+        // Soft fail
+        console.warn(`${exportedDisplayName} does not have any props`)
+    }
 }
 
 function zipArrays(...arrays) {
@@ -160,9 +166,9 @@ function gatherComponents(sources, components = {}) {
         const extension = path.extname(filepath);
         if (['.jsx', '.js'].includes(extension)) {
             components[cleanPath(filepath)] = parseJSX(filepath);
-        } else if (filepath.endsWith('.tsx')) {
+        } else if (['.tsx', 'ts'].includes(extension)) {
             try {
-                const name = /(.*)\.tsx/.exec(path.basename(filepath))[1];
+                const name = /(.*)\.(ts|tsx)/.exec(path.basename(filepath))[1];
                 filepaths.push(filepath);
                 names.push(name);
             } catch (err) {
@@ -720,6 +726,24 @@ function gatherComponents(sources, components = {}) {
                 }
             }
 
+            const isArrowFunction = ts.isArrowFunction(declaration)
+            const isClass = ts.isClassDeclaration(declaration);
+            const isFunction = ts.isFunctionDeclaration(declaration)
+
+            if (!isArrowFunction && !isClass && !isFunction) {
+                // we do not care about these exports
+                return null
+            }
+
+            if (isArrowFunction || isFunction) {
+                const signature = checker.getSignaturesOfType(type, ts.SignatureKind.Call)[0];
+                const returnType = checker.typeToString(signature.getReturnType());
+                if (!['Element', 'any', 'null'].includes(returnType)) {
+                    // Not JSX so no need to classifiy as compnent
+                    return null;
+                }
+            }
+
             let defaultProps = getDefaultProps(typeSymbol, source);
             const propsType = getPropsForFunctionalComponent(type);
             const isContext = !!type.getProperty('isContext');
@@ -772,9 +796,12 @@ function gatherComponents(sources, components = {}) {
                 displayName: name,
                 description,
                 props,
-                isContext
+                isContext,
+                exportedName: rootExp.name
             };
             docstringWarning(doc);
+
+            // todo: Add support for mutiple components in single file
             components[cleanPath(filepath)] = doc;
         });
     });

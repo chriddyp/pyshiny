@@ -1,5 +1,5 @@
 import React from 'react';
-import {WrappedHTMLProps} from '../props';
+import { WrappedHTMLProps } from '../props';
 
 /**
  * Component docstring

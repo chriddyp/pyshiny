@@ -17,5 +17,5 @@ export {
   FCComponent,
   EmptyComponent,
   MixedComponent,
-  RequiredChildrenComponent,
+  RequiredChildrenComponent
 };
