@@ -1,5 +1,7 @@
 import traceback
 from contextvars import copy_context
+import asyncio
+from functools import partial
 
 from . import BaseLongCallbackManager
 from .._proxy_set_props import ProxySetProps
@@ -116,16 +118,52 @@ DiskcacheLongCallbackManager requires extra dependencies which can be installed 
 
     # noinspection PyUnresolvedReferences
     def call_job_fn(self, key, job_fn, args, context):
+        """
+        Call the job function, supporting both sync and async jobs.
+        Args:
+            key: Cache key for the job.
+            job_fn: The job function to execute.
+            args: Arguments for the job function.
+            context: Context for the job.
+        Returns:
+            The PID of the spawned process or None for async execution.
+        """
         # pylint: disable-next=import-outside-toplevel,no-name-in-module,import-error
         from multiprocess import Process
 
         # pylint: disable-next=not-callable
-        proc = Process(
+        process = Process(
             target=job_fn,
             args=(key, self._make_progress_key(key), args, context),
         )
-        proc.start()
-        return proc.pid
+        process.start()
+        return process.pid
+
+    @staticmethod
+    def _run_async_in_process(job_fn, key, args, context):
+        """
+        Helper function to run an async job in a new process.
+        Args:
+            job_fn: The async job function.
+            key: Cache key for the job.
+            args: Arguments for the job function.
+            context: Context for the job.
+        """
+        # Create a new event loop for the process
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+
+        # Wrap the job function to include key and progress
+        async_job = partial(job_fn, key, args, context)
+
+        try:
+            # Run the async job and wait for completion
+            loop.run_until_complete(async_job())
+        except Exception as e:
+            # Handle errors, log them, and cache if necessary
+            raise Exception(str(e)) from e
+        finally:
+            loop.close()
 
     def get_progress(self, key):
         progress_key = self._make_progress_key(key)
@@ -168,7 +206,9 @@ DiskcacheLongCallbackManager requires extra dependencies which can be installed 
         return result
 
 
+# pylint: disable-next=too-many-statements
 def _make_job_fn(fn, cache, progress):
+    # pylint: disable-next=too-many-statements
     def job_fn(result_key, progress_key, user_callback_args, context):
         def _set_progress(progress_value):
             if not isinstance(progress_value, (list, tuple)):
@@ -214,7 +254,47 @@ def _make_job_fn(fn, cache, progress):
             if not errored:
                 cache.set(result_key, user_callback_output)
 
-        ctx.run(run)
+        async def async_run():
+            c = AttributeDict(**context)
+            c.ignore_register_page = False
+            c.updated_props = ProxySetProps(_set_props)
+            context_value.set(c)
+            errored = False
+            try:
+                if isinstance(user_callback_args, dict):
+                    user_callback_output = await fn(
+                        *maybe_progress, **user_callback_args
+                    )
+                elif isinstance(user_callback_args, (list, tuple)):
+                    user_callback_output = await fn(
+                        *maybe_progress, *user_callback_args
+                    )
+                else:
+                    user_callback_output = await fn(*maybe_progress, user_callback_args)
+            except PreventUpdate:
+                errored = True
+                cache.set(result_key, {"_dash_no_update": "_dash_no_update"})
+            except Exception as err:  # pylint: disable=broad-except
+                errored = True
+                cache.set(
+                    result_key,
+                    {
+                        "long_callback_error": {
+                            "msg": str(err),
+                            "tb": traceback.format_exc(),
+                        }
+                    },
+                )
+            if asyncio.iscoroutine(user_callback_output):
+                user_callback_output = await user_callback_output
+            if not errored:
+                cache.set(result_key, user_callback_output)
+
+        if asyncio.iscoroutinefunction(fn):
+            func = partial(ctx.run, async_run)
+            asyncio.run(func())
+        else:
+            ctx.run(run)
 
     return job_fn
 

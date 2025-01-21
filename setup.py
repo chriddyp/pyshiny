@@ -29,6 +29,7 @@ setup(
     install_requires=read_req_file("install"),
     python_requires=">=3.8",
     extras_require={
+        "async": read_req_file("async"),
         "ci": read_req_file("ci"),
         "dev": read_req_file("dev"),
         "testing": read_req_file("testing"),
