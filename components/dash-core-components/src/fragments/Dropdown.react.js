@@ -24,6 +24,7 @@ const TOKENIZER = {
 
 const RDProps = [
     'multi',
+    'close_on_select',
     'clearable',
     'searchable',
     'search_value',
@@ -40,6 +41,7 @@ const Dropdown = props => {
         id,
         clearable,
         multi,
+        close_on_select,
         options,
         setProps,
         search_value,
@@ -156,6 +158,7 @@ const Dropdown = props => {
                 filterOptions={filterOptions}
                 options={sanitizedOptions}
                 value={value}
+                closeOnSelect={multi ? close_on_select : true}
                 onChange={onChange}
                 onInputChange={onInputChange}
                 backspaceRemoves={clearable}
