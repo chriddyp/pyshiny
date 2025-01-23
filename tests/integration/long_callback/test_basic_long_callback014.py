@@ -13,5 +13,6 @@ def test_lcbc014_progress_delete(dash_duo, manager):
         dash_duo.start_server(app)
         dash_duo.find_element("#start").click()
         dash_duo.wait_for_text_to_equal("#output", "done")
-
-        assert dash_duo.find_element("#progress-counter").text == "2"
+        with app.test_lock:
+            assert dash_duo.find_element("#progress-output").text == "stop"
+            assert dash_duo.find_element("#progress-counter").text == "2"
