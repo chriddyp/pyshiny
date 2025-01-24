@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [UNRELEASED]
 
+## Added
+
+- [#3068](https://github.com/plotly/dash/pull/3068) Add titles to labels in Checklist and RadioItems components
+
 ## Fixed
 
 - [#3080](https://github.com/plotly/dash/pull/3080) Fix docstring generation for components using single-line or nonstandard-indent leading comments
