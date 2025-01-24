@@ -31,6 +31,8 @@ const inputProps = [
     'size',
     'style',
     'id',
+    'currencyFormat',
+    'currencySymbol',
 ];
 
 /**
@@ -46,7 +48,10 @@ export default class Input extends PureComponent {
 
         this.state = {
             pendingEvent: undefined,
-            value: '',
+            value: '' | props.value,
+            displayValue: props.currencyFormat
+                ? this.formatCurrency(props.value)
+                : props.value,
         };
 
         this.input = React.createRef();
@@ -58,6 +63,7 @@ export default class Input extends PureComponent {
         this.debounceEvent = this.debounceEvent.bind(this);
         this.setInputValue = this.setInputValue.bind(this);
         this.setPropValue = this.setPropValue.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     UNSAFE_componentWillReceiveProps(nextProps) {
@@ -90,25 +96,58 @@ export default class Input extends PureComponent {
             this.setState({value: this.props.value});
         }
     }
+    formatCurrency(value) {
+        if (isNaN(value) || value === '') {
+            return '';
+        }
+        const {currencySymbol} = this.props;
+
+        return `${currencySymbol}${Number(value).toLocaleString()}`;
+    }
+    parseDisplayValue(value) {
+        if (!value) {
+            return '';
+        }
+        // Remove currency symbol and non-numeric characters
+        return Number(value.replace(/[^0-9.-]+/g, ''));
+    }
+    handleInputChange(event) {
+        const {value} = event.target;
+        const valueAsNumber = this.parseDisplayValue(value);
+        this.setState({
+            value: valueAsNumber,
+            displayValue: this.props.currencyFormat
+                ? this.formatCurrency(valueAsNumber)
+                : valueAsNumber,
+        });
+    }
 
     render() {
-        const valprops =
-            this.props.type === 'number' ? {} : {value: this.state.value};
-        const {loading_state} = this.props;
+        const {loading_state, currencyFormat} = this.props;
+        let valprops;
+        if (this.props.type === 'number' && !currencyFormat) {
+            valprops = { value: this.state.value }; // Always show the number
+        } else {
+            valprops = { value: this.state.displayValue }; // Use formatted display value for currency
+        }
         let {className} = this.props;
+
+        const inputType = currencyFormat ? 'text' : 'number';
+
         className = 'dash-input' + (className ? ` ${className}` : '');
         return (
             <input
+                type={inputType}
                 data-dash-is-loading={
                     (loading_state && loading_state.is_loading) || undefined
                 }
                 className={className}
                 ref={this.input}
                 onBlur={this.onBlur}
-                onChange={this.onChange}
+                onChange={this.handleInputChange}
                 onKeyPress={this.onKeyPress}
                 {...valprops}
-                {...pick(inputProps, this.props)}
+                {...pick(['type', 'name', 'id', 'placeholder'], inputProps)}
             />
         );
     }
@@ -119,7 +158,14 @@ export default class Input extends PureComponent {
         value = convert(value);
 
         if (!isEquivalent(base, value)) {
-            this.input.current.value = isNumeric(value) ? value : __value;
+            if (isNumeric(value)) {
+                const formattedValue = this.props.currencyFormat
+                    ? this.formatCurrency(value)
+                    : value;
+                this.setState({displayValue: formattedValue}, () => {});
+            } else {
+                this.setState({displayValue: __value});
+            }
         }
     }
 
@@ -131,18 +177,22 @@ export default class Input extends PureComponent {
             this.props.setProps({value});
         }
     }
-
     onEvent() {
         const {value} = this.input.current;
-        const valueAsNumber = convert(value);
+        const valueAsNumber = this.parseDisplayValue(value);
+
         if (this.props.type === 'number') {
             this.setPropValue(
                 this.props.value,
-                isNil(valueAsNumber) ? value : valueAsNumber
+                isNaN(valueAsNumber) ? value : valueAsNumber
             );
         } else {
-            this.props.setProps({value});
+            const formattedValue = this.props.currencyFormat
+                ? this.formatCurrency(valueAsNumber)
+                : value;
+            this.props.setProps({value: formattedValue});
         }
+
         this.setState({pendingEvent: undefined});
     }
 
@@ -207,6 +257,8 @@ Input.defaultProps = {
     step: 'any',
     persisted_props: ['value'],
     persistence_type: 'local',
+    currencyFormat: false,
+    currencySymbol: '$',
 };
 
 Input.propTypes = {
@@ -238,6 +290,29 @@ Input.propTypes = {
      * typing for that number of seconds.
      */
     debounce: PropTypes.oneOfType([PropTypes.bool, PropTypes.number]),
+
+    /**
+     * If true and type is 'number', formats the input value as currency.
+     */
+    currencyFormat: (props, propName, componentName) => {
+        if (props.currencyFormat && props.type !== 'number') {
+            return new Error(
+                `Invalid prop \`${propName}\` supplied to ` +
+                    `\`${componentName}\`. \`${propName}\` can only be used when \`type\` is \`number\`.`
+            );
+        }
+        return null; // Ensure to return null if there’s no error
+    },
+
+    currencySymbol: (props, propName, componentName) => {
+        if (props.currencySymbol && props.type !== 'number') {
+            return new Error(
+                `Invalid prop \`${propName}\` supplied to ` +
+                    `\`${componentName}\`. \`${propName}\` can only be used when \`type\` is \`number\`.`
+            );
+        }
+        return null; // Ensure to return null if there’s no error
+    },
 
     /**
      * A hint to the user of what can be entered in the control . The placeholder text must not contain carriage returns or line-feeds. Note: Do not use the placeholder attribute instead of a <label> element, their purposes are different. The <label> attribute describes the role of the form element (i.e. it indicates what kind of information is expected), and the placeholder attribute is a hint about the format that the content should take. There are cases in which the placeholder attribute is never displayed to the user, so the form must be understandable without it.
