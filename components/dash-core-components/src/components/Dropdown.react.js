@@ -1,6 +1,7 @@
 import PropTypes from 'prop-types';
 import React, {Component, lazy, Suspense} from 'react';
 import dropdown from '../utils/LazyLoader/dropdown';
+import './css/Dropdown.css';
 
 const RealDropdown = lazy(dropdown);
 
@@ -14,11 +15,36 @@ const RealDropdown = lazy(dropdown);
  * constrained for space. Otherwise, you can use RadioItems or a Checklist,
  * which have the benefit of showing the users all of the items at once.
  */
-export default class Dropdown extends Component {
+ export default class Dropdown extends Component {
     render() {
+        const { style, className, ...props } = this.props;
         return (
             <Suspense fallback={null}>
-                <RealDropdown {...this.props} />
+                <RealDropdown
+                    {...props}
+                    className={`dash-dropdown ${className || ''}`}
+                    styles={{
+                        control: (provided) => ({
+                            ...provided,
+                            display: 'inline-block',
+                            verticalAlign: 'middle',
+                            width: style?.width || '300px', // Default width
+                        }),
+                        menu: (provided) => ({
+                            ...provided,
+                            maxHeight: 'none',
+                            display: 'inline-block',
+                            width: style?.width || '300px', // Default width
+                            verticalAlign: 'middle',
+                        }),
+                        menuOuter: (provided) => ({
+                            ...provided,
+                            maxHeight: 'none',
+                            zIndex: 1000,
+                            width: style?.width || '300px', // Default width
+                        }),
+                    }}
+                />
             </Suspense>
         );
     }
