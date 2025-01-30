@@ -109,8 +109,7 @@ jobs:
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
-      - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
+      - browser-tools/install-browser-tools
       - run:
           name: ️️🏗️ pip dev requirements
           command: |
@@ -205,7 +204,6 @@ jobs:
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -309,7 +307,6 @@ jobs:
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -373,7 +370,6 @@ jobs:
       - restore_cache:
           key: html-{{ checksum "components/dash-html-components/package.json" }}-{{ checksum "components/dash-html-components/package-lock.json" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -440,7 +436,6 @@ jobs:
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -492,7 +487,6 @@ jobs:
       - restore_cache:
           key: table-{{ checksum "components/dash-table/package.json" }}-{{ checksum "components/dash-table/package-lock.json" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
