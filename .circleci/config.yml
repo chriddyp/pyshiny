@@ -9,7 +9,7 @@ orbs:
 jobs:
   artifacts:
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -89,7 +89,7 @@ jobs:
   lint-unit-312: &lint-unit
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -134,7 +134,7 @@ jobs:
   lint-unit-38:
     <<: *lint-unit
     docker:
-      - image: cimg/python:3.8.18
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -175,7 +175,7 @@ jobs:
   test-312: &test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -230,7 +230,7 @@ jobs:
   test-38:
     <<: *test
     docker:
-      - image: cimg/python:3.8.18
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -284,7 +284,7 @@ jobs:
   dcc-312: &dcc-test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -334,7 +334,7 @@ jobs:
   dcc-38:
     <<: *dcc-test
     docker:
-      - image: cimg/python:3.8.18
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -345,7 +345,7 @@ jobs:
   html-312: &html-test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -403,7 +403,7 @@ jobs:
   html-38:
     <<: *html-test
     docker:
-      - image: cimg/python:3.8.18
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -414,7 +414,7 @@ jobs:
   table-server: &table-server
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         environment:
           PYVERSION: python312
           PERCY_ENABLE: 1
@@ -467,7 +467,7 @@ jobs:
   table-unit-test:
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         environment:
           PYVERSION: python312
           PERCY_ENABLE: 0
