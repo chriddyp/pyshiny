@@ -154,7 +154,7 @@ Keyword arguments:
         optionalAny: typing.Optional[typing.Any] = None,
         customProp: typing.Optional[typing.Any] = None,
         customArrayProp: typing.Optional[typing.Sequence[typing.Any]] = None,
-        id: typing.Optional[str] = None,
+        id: typing.Optional[typing.Union[str, dict]] = None,
         **kwargs
     ):
         self._prop_names = ['children', 'id', 'aria-*', 'customArrayProp', 'customProp', 'data-*', 'in', 'optionalAny', 'optionalArray', 'optionalArrayOf', 'optionalBool', 'optionalElement', 'optionalEnum', 'optionalNode', 'optionalNumber', 'optionalObject', 'optionalObjectOf', 'optionalObjectWithExactAndNestedDescription', 'optionalObjectWithShapeAndNestedDescription', 'optionalString', 'optionalUnion']

@@ -3,13 +3,13 @@ version: 2.1
 orbs:
   win: circleci/windows@5.0.0
   percy: percy/agent@0.1.3
-  browser-tools: circleci/browser-tools@1.4.8
+  browser-tools: circleci/browser-tools@1.5.0
 
 
 jobs:
   artifacts:
     docker:
-      - image: cimg/python:3.12.1
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -89,7 +89,7 @@ jobs:
   lint-unit-312: &lint-unit
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -99,13 +99,18 @@ jobs:
 
     steps:
       - checkout
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
+          chrome-version: 127.0.6533.119
       - run:
           name: ️️🏗️ pip dev requirements
           command: |
@@ -130,7 +135,7 @@ jobs:
   lint-unit-38:
     <<: *lint-unit
     docker:
-      - image: cimg/python:3.8.18-browsers
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -171,7 +176,7 @@ jobs:
   test-312: &test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -189,13 +194,17 @@ jobs:
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -222,7 +231,7 @@ jobs:
   test-38:
     <<: *test
     docker:
-      - image: cimg/python:3.8.18-browsers
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -276,7 +285,7 @@ jobs:
   dcc-312: &dcc-test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -288,13 +297,17 @@ jobs:
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -322,7 +335,7 @@ jobs:
   dcc-38:
     <<: *dcc-test
     docker:
-      - image: cimg/python:3.8.18-browsers
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -333,7 +346,7 @@ jobs:
   html-312: &html-test
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -345,7 +358,12 @@ jobs:
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
@@ -353,7 +371,6 @@ jobs:
       - restore_cache:
           key: html-{{ checksum "components/dash-html-components/package.json" }}-{{ checksum "components/dash-html-components/package-lock.json" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -387,7 +404,7 @@ jobs:
   html-38:
     <<: *html-test
     docker:
-      - image: cimg/python:3.8.18-browsers
+      - image: cimg/python:3.8.18-node
         auth:
           username: dashautomation
           password: $DASH_PAT_DOCKERHUB
@@ -398,7 +415,7 @@ jobs:
   table-server: &table-server
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         environment:
           PYVERSION: python312
           PERCY_ENABLE: 1
@@ -409,13 +426,18 @@ jobs:
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -447,14 +469,19 @@ jobs:
   table-unit-test:
     working_directory: ~/dash
     docker:
-      - image: cimg/python:3.12.1-browsers
+      - image: cimg/python:3.12.1-node
         environment:
           PYVERSION: python312
           PERCY_ENABLE: 0
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - run: echo $PYVERSION > ver.txt
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
@@ -462,7 +489,7 @@ jobs:
       - restore_cache:
           key: table-{{ checksum "components/dash-table/package.json" }}-{{ checksum "components/dash-table/package-lock.json" }}
       - browser-tools/install-browser-tools:
-          chrome-version: 120.0.6099.71
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -489,17 +516,23 @@ jobs:
   table-visual-test:
     working_directory: ~/dash/components/dash-table
     docker:
-      - image: cimg/node:lts-browsers
+      - image: cimg/node:lts
         environment:
           PERCY_TOKEN: $PERCY_TOKEN_TABLE
 
     steps:
       - checkout:
           path: ~/dash
-      - run: sudo apt-get update
+      - run:
+          name: Update and install Chrome keys.
+          command: |
+            sudo apt-get update -y
+            sudo apt-get install -y wget
+            wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | sudo apt-key add -
       - restore_cache:
           key: dep-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "package.json" }}
       - browser-tools/install-browser-tools:
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - run:

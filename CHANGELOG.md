@@ -2,6 +2,12 @@
 All notable changes to `dash` will be documented in this file.
 This project adheres to [Semantic Versioning](https://semver.org/).
 
+## [3.0.0-rc2] - UNRELEASED
+
+## Fixed
+
+- [#3142](https://github.com/plotly/dash/pull/3142) Fix typing generation for id and dates props.
+
 ## [3.0.0-rc1] - 2025-01-28
 
 ## Added

@@ -120,6 +120,10 @@ def generate_enum(type_info, *_):
 def get_prop_typing(
     type_name: str, component_name: str, prop_name: str, type_info, namespace=None
 ):
+    if prop_name == "id":
+        # Id is always the same either a string or a dict for pattern matching.
+        return "typing.Union[str, dict]"
+
     if namespace:
         # Only check the namespace once
         special = (
@@ -141,7 +145,38 @@ def generate_plotly_figure(*_):
     return "typing.Union[Figure, dict]"
 
 
-special_cases = {"dash_core_components": {"Graph": {"figure": generate_plotly_figure}}}
+def generate_datetime_prop(component, array=False):
+    if "import datetime" not in custom_imports["dash_core_components"][component]:
+        custom_imports["dash_core_components"][component].append("import datetime")
+
+    def generator(*_):
+        datetime_type = "typing.Union[str, datetime.datetime]"
+        if array:
+            datetime_type = f"typing.Sequence[{datetime_type}]"
+        return datetime_type
+
+    return generator
+
+
+special_cases = {
+    "dash_core_components": {
+        "Graph": {"figure": generate_plotly_figure},
+        "DatePickerRange": {
+            "start_date": generate_datetime_prop("DatePickerRange"),
+            "end_date": generate_datetime_prop("DatePickerRange"),
+            "min_date_allowed": generate_datetime_prop("DatePickerRange"),
+            "max_date_allowed": generate_datetime_prop("DatePickerRange"),
+            "disabled_days": generate_datetime_prop("DatePickerRange", True),
+        },
+        "DatePickerSingle": {
+            "date": generate_datetime_prop("DatePickerSingle"),
+            "min_date_allowed": generate_datetime_prop("DatePickerSingle"),
+            "max_date_allowed": generate_datetime_prop("DatePickerSingle"),
+            "disabled_days": generate_datetime_prop("DatePickerSingle", True),
+            "initial_visible_month": generate_datetime_prop("DatePickerSingle"),
+        },
+    }
+}
 
 
 PROP_TYPING = {
