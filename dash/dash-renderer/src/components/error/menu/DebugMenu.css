@@ -21,11 +21,6 @@
     background-color: #108de4;
 }
 
-.dash-debug-menu__icon {
-    width: auto;
-    height: 24px;
-}
-
 .dash-debug-menu__outer {
     transition: 0.3s;
     box-sizing: border-box;
@@ -33,13 +28,13 @@
     bottom: 27px;
     right: 27px;
     display: flex;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    height: 80px;
-    border-radius: 40px;
-    padding: 5px 78px 5px 5px;
-    background-color: #fff;
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #f5f6fa;
     box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.25),
         0px 1px 3px rgba(162, 177, 198, 0.32);
 }
@@ -51,98 +46,94 @@
     padding: 0;
 }
 
-.dash-debug-menu__content {
-    display: flex;
-    width: 100%;
-    height: 100%;
-}
-
-.dash-debug-menu__button-container {
+.dash-debug-menu__upgrade-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    right: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    background-color: white;
+    border-radius: 3px;
+    border: 1px solid #0018661a;
+    padding: 11px;
+    box-shadow: 0px 0px 14px 5px #00000012;
+    z-index: 1200;
+}
+
+.dash-debug-menu__status {
+    margin: 3px;
+    display: flex;
     align-items: center;
-    width: 74px;
+}
+.dash-debug-menu__icon {
+    margin: 0 5px;
+}
+
+.dash-debug-menu__upgrade-tooltip button,
+.dash-debug-menu__upgrade-tooltip a {
+    background: white;
+    border: none;
+    padding: 2px 5px;
+    white-space: nowrap;
+    color: #7f4bc4;
+    font-size: 10pt;
+    text-decoration: none;
+    font-family: none;
+    cursor: pointer;
+    display: flex;
+}
+
+.dash-debug-menu__upgrade-tooltip:after {
+    content: ' ';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+}
+
+.dash-debug-menu__content {
+    display: flex;
+    align-items: stretch;
+    margin: 10px;
+}
+
+.dash-debug-menu__version {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dash-debug-menu__divider {
+    width: 1.5px;
+    height: 26px;
+    margin: 0px 13px;
+    background-color: #0015594d;
 }
 
 .dash-debug-menu__button {
-    position: relative;
-    background-color: #B9C2CE;
-    border-radius: 100%;
-    width: 64px;
-    height: 64px;
-    font-size: 10px;
+    background: none;
+    border: none;
+    box-shadow: 0 1px #d3dae6;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     transition: background-color 0.2s;
-    color: #fff;
     cursor: pointer;
+    font-weight: bold;
 }
 .dash-debug-menu__button:hover {
-    background-color: #a1a9b5;
-}
-.dash-debug-menu__button--enabled {
-    background-color: #00CC96;
-}
-.dash-debug-menu__button.dash-debug-menu__button--enabled:hover {
-    background-color: #03bb8a;
+    color: black;
 }
 
-.dash-debug-menu__button-label {
-    cursor: inherit;
+.dash-debug-menu__button.dash-debug-menu__button--selected {
+    color: #7f4bc4;
+    box-shadow: 0 2px #0071c2;
 }
-
-.dash-debug-menu__button::before {
-    visibility: hidden;
-    pointer-events: none;
-    position: absolute;
-    box-sizing: border-box;
-    bottom: 110%;
-    left: 50%;
-    margin-left: -60px;
-    padding: 7px;
-    width: 120px;
-    border-radius: 3px;
-    background-color: rgba(68,68,68,0.7);
-    color: #fff;
-    text-align: center;
-    font-size: 10px;
-    line-height: 1.2;
-}
-.dash-debug-menu__button:hover::before {
-    visibility: visible;
-}
-.dash-debug-menu__button--callbacks::before {
-    content: "Toggle Callback Graph";
-}
-.dash-debug-menu__button--errors::before {
-    content: "Toggle Errors";
-}
-.dash-debug-menu__button--available,
-.dash-debug-menu__button--available:hover {
-    background-color: #00CC96;
-    cursor: default;
-}
-.dash-debug-menu__button--available::before {
-    content: "Server Available";
-}
-.dash-debug-menu__button--unavailable,
-.dash-debug-menu__button--unavailable:hover {
-    background-color: #F1564E;
-    cursor: default;
-}
-.dash-debug-menu__button--unavailable::before {
-    content: "Server Unavailable. Check if the process has halted or crashed.";
-}
-.dash-debug-menu__button--cold,
-.dash-debug-menu__button--cold:hover {
-    background-color: #FDDA68;
-    cursor: default;
-}
-.dash-debug-menu__button--cold::before {
-    content: "Hot Reload Disabled";
+.dash-debug-menu__button.dash-debug-menu__button--selected:hover {
+    color: #5806c4;
 }
 
 .dash-debug-alert {

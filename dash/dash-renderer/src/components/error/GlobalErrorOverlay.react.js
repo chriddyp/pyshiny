@@ -11,7 +11,7 @@ export default class GlobalErrorOverlay extends Component {
     }
 
     render() {
-        const {visible, error, errorsOpened, clickHandler} = this.props;
+        const {visible, error, errorsOpened, clickHandler, config} = this.props;
 
         let frontEndErrors;
         if (errorsOpened) {
@@ -21,8 +21,8 @@ export default class GlobalErrorOverlay extends Component {
                 <FrontEndErrorContainer
                     errors={errors}
                     connected={error.backEndConnected}
-                    errorsOpened={errorsOpened}
                     clickHandler={clickHandler}
+                    config={config}
                 />
             );
         }
@@ -44,5 +44,6 @@ GlobalErrorOverlay.propTypes = {
     visible: PropTypes.bool,
     error: PropTypes.object,
     errorsOpened: PropTypes.any,
-    clickHandler: PropTypes.func
+    clickHandler: PropTypes.func,
+    config: PropTypes.object
 };

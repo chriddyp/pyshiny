@@ -9,11 +9,7 @@ class FrontEndErrorContainer extends Component {
     }
 
     render() {
-        const {errors, connected, errorsOpened, clickHandler} = this.props;
-        const errorsLength = errors.length;
-        if (errorsLength === 0 || !errorsOpened) {
-            return null;
-        }
+        const {errors, connected} = this.props;
 
         const inAlertsTray = this.props.inAlertsTray;
         let cardClasses = 'dash-error-card dash-error-card--container';
@@ -28,17 +24,8 @@ class FrontEndErrorContainer extends Component {
             <div className={cardClasses}>
                 <div className='dash-error-card__topbar'>
                     <div className='dash-error-card__message'>
-                        🛑 Errors (
-                        <strong className='test-devtools-error-count'>
-                            {errorsLength}
-                        </strong>
-                        ){connected ? null : '\u00a0 🚫 Server Unavailable'}
-                    </div>
-                    <div
-                        className='dash-fe-error__icon-x'
-                        onClick={() => clickHandler()}
-                    >
-                        ×
+                        Errors
+                        {connected ? null : '\u00a0 🚫 Server Unavailable'}
                     </div>
                 </div>
                 <div className='dash-error-card__list'>{errorElements}</div>
@@ -51,9 +38,7 @@ FrontEndErrorContainer.propTypes = {
     id: PropTypes.string,
     errors: PropTypes.array,
     connected: PropTypes.bool,
-    inAlertsTray: PropTypes.any,
-    errorsOpened: PropTypes.any,
-    clickHandler: PropTypes.func
+    inAlertsTray: PropTypes.any
 };
 
 FrontEndErrorContainer.propTypes = {

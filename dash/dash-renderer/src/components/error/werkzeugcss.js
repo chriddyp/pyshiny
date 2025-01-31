@@ -4,11 +4,7 @@
 export default `
 body {
     margin: 0px;
-    margin-top: 10px;
-}
-
-.error-container {
-    font-family: Roboto;
+    overflow: hidden;
 }
 
 .traceback {

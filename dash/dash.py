@@ -766,6 +766,7 @@ class Dash:
             "update_title": self.config.update_title,
             "children_props": ComponentRegistry.children_props,
             "serve_locally": self.config.serve_locally,
+            "dash_version": __version__,
         }
         if not self.config.serve_locally:
             config["plotlyjs_url"] = self._plotlyjs_url

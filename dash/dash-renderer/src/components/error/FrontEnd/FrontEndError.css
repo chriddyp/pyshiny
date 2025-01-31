@@ -1,22 +1,31 @@
 .error-container {
-    margin-top: 10px;
+    padding: 0 10px;
 }
 
 .dash-fe-error__icon-x {
     position: absolute;
     right: 0;
     top: 0;
-    color: #B9C2CE;
+    color: #b9c2ce;
     font-size: 20px;
     cursor: pointer;
-    margin-right: 10px
+    margin-right: 10px;
 }
 
-.dash-fe-error__icon-x:hover
-{
- color:#a1a9b5;
+.dash-debug-menu__upgrade-button {
+    background-color: #a159ff0d;
+    border: 1px solid #864ad433;
+    color: #7f4bc4;
+    margin-left: 10px;
 }
 
+.dash-debug-menu__upgrade-button:hover {
+    background-color: #864ad433;
+}
+
+.dash-fe-error__icon-x:hover {
+    color: #a1a9b5;
+}
 
 .dash-fe-errors {
     min-width: 386px;
@@ -44,12 +53,13 @@
     height: 28px;
     margin: 0px 8px;
 }
-.dash-fe-error-top {
-    height: 20px;
-    display: flex;
-    justify-content: space-between;
-    width: 100%;
-    cursor: pointer;
+.dash-debug-menu__error-count {
+    font-size: 12px;
+    color: #fff;
+    background-color: #c73a3a;
+    padding: 3px 5px;
+    border-radius: 3px;
+    margin: 0 5px;
 }
 .dash-fe-error-top__group:first-child {
     /*
@@ -119,7 +129,7 @@
 .dash-fe-error__curved-bottom {
     border-radius-bottom-left: 4px;
     border-radius-bottom-right: 4px;
-    background-color: #FFEFEF;
+    background-color: #ffefef;
 }
 
 .dash-be-error__st {
@@ -138,4 +148,107 @@
     overflow: auto;
     display: inline-block;
     white-space: pre-wrap;
+}
+
+.dash-error-menu {
+    max-width: 50%;
+    max-height: 60%;
+    display: contents;
+    font-family: monospace;
+    font-size: 14px;
+    font-variant-ligatures: common-ligatures;
+    color: rgb(50, 50, 50);
+}
+
+.dash-error-card {
+    box-sizing: border-box;
+    display: inline-block;
+    /* shadow-1 */
+    border-radius: 4px;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    animation: dash-error-card-animation 0.5s;
+    padding: 24px;
+    text-align: left;
+    background: transparent;
+    width: 100%;
+}
+.dash-error-card--alerts-tray {
+    position: absolute;
+    top: -300px;
+    left: -1px;
+    animation: none;
+    box-shadow: none;
+    border: 1px solid #ececec;
+    border-bottom: 0;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    width: 422px;
+}
+.dash-error-card--container {
+    padding: 20px;
+    width: 600px;
+    max-width: 800px;
+    max-height: calc(100vh - 125px);
+    margin-bottom: 7px;
+    background-color: white;
+    overflow: auto;
+    z-index: 1100; /* above the plotly.js toolbar and Bootstrap components */
+    box-shadow: 0 0 15px 6px #0000000d;
+}
+
+.dash-error-card__topbar {
+    width: 100%;
+    height: 32px;
+    display: flex;
+    justify-content: flex-start;
+    font-family: Inter;
+    font-size: 14px;
+    align-items: center;
+    position: relative;
+}
+.dash-error-card__message {
+    font-size: 14px;
+}
+
+.dash-error-card__message > strong {
+    color: #ff4500;
+}
+
+.dash-error-card__content {
+    box-sizing: border-box;
+    background-color: white;
+    border-radius: 2px;
+    margin-bottom: 15px;
+    border: 1px solid #0018661a;
+    font-family: Menlo;
+    font-size: 12.6px;
+}
+
+.dash-fe-error-item {
+    background: #ffffff;
+    border-radius: 2px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+}
+
+@keyframes dash-error-card-animation {
+    from {
+        opacity: 0;
+        -webkit-transform: scale(1.1);
+        -moz-transform: scale(1.1);
+        -ms-transform: scale(1.1);
+        transform: scale(1.1);
+    }
+    to {
+        opacity: 1;
+        -webkit-transform: scale(1);
+        -moz-transform: scale(1);
+        -ms-transform: scale(1);
+        transform: scale(1);
+    }
 }

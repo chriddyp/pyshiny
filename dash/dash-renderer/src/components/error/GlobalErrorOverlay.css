@@ -10,12 +10,8 @@
 
 .dash-error-card {
     box-sizing: border-box;
-    background: #ffffff;
     display: inline-block;
     /* shadow-1 */
-    box-shadow: 0px 6px 16px rgba(80, 103, 132, 0.165),
-        0px 2px 6px rgba(80, 103, 132, 0.12),
-        0px 0px 1px rgba(80, 103, 132, 0.32);
     border-radius: 4px;
     position: fixed;
     top: 16px;
@@ -23,8 +19,8 @@
     animation: dash-error-card-animation 0.5s;
     padding: 24px;
     text-align: left;
-    background-color: white;
-
+    background: transparent;
+    width: 100%;
 }
 .dash-error-card--alerts-tray {
     position: absolute;
@@ -45,7 +41,7 @@
     max-height: calc(100vh - 50px);
     margin: 10px;
     overflow: auto;
-    z-index: 1100;  /* above the plotly.js toolbar and Bootstrap components */
+    z-index: 1100; /* above the plotly.js toolbar and Bootstrap components */
 }
 
 .dash-error-card__topbar {

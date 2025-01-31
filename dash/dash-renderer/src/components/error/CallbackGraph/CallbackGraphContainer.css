@@ -1,8 +1,8 @@
 .dash-callback-dag--container {
     border-radius: 4px;
-    position: fixed;
-    bottom: 165px;
-    right: 16px;
+    position: absolute;
+    bottom: calc(100% + 4px);
+    right: 0;
     width: 80vw;
     height: calc(100vh - 180px);
     overflow: auto;
@@ -25,9 +25,9 @@
     max-height: 50%;
     overflow: auto;
     box-sizing: border-box;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     border: 2px solid #ccc;
-    font-family: "Arial", sans-serif;
+    font-family: 'Arial', sans-serif;
 }
 
 .dash-callback-dag--message {
@@ -37,7 +37,7 @@
     align-items: center;
     height: 100%;
     line-height: 2em;
-    font-family: "Arial", sans-serif;
+    font-family: 'Arial', sans-serif;
 }
 
 .dash-callback-dag--layoutSelector {
