@@ -6,7 +6,7 @@ import 'react-virtualized-select/styles.css';
 import '../components/css/react-virtualized@9.9.0.css';
 import '../components/css/Dropdown.css';
 
-import {propTypes, defaultProps} from '../components/Dropdown.react';
+import {propTypes} from '../components/Dropdown.react';
 import {sanitizeOptions} from '../utils/optionTypes';
 import isEqual from 'react-fast-compare';
 
@@ -168,6 +168,5 @@ const Dropdown = props => {
 };
 
 Dropdown.propTypes = propTypes;
-Dropdown.defaultProps = defaultProps;
 
 export default Dropdown;
