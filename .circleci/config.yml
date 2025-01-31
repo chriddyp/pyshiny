@@ -109,7 +109,8 @@ jobs:
       - run: cat requirements/*.txt > requirements-all.txt
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
-      - browser-tools/install-browser-tools
+      - browser-tools/install-browser-tools:
+          chrome-version: 127.0.6533.119
       - run:
           name: ️️🏗️ pip dev requirements
           command: |
@@ -436,6 +437,7 @@ jobs:
       - restore_cache:
           key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
       - browser-tools/install-browser-tools:
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -487,6 +489,7 @@ jobs:
       - restore_cache:
           key: table-{{ checksum "components/dash-table/package.json" }}-{{ checksum "components/dash-table/package-lock.json" }}
       - browser-tools/install-browser-tools:
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - attach_workspace:
@@ -529,6 +532,7 @@ jobs:
       - restore_cache:
           key: dep-{{ .Branch }}-{{ checksum "package-lock.json" }}-{{ checksum "package.json" }}
       - browser-tools/install-browser-tools:
+          chrome-version: 127.0.6533.119
           install-firefox: false
           install-geckodriver: false
       - run:
