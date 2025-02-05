@@ -18,6 +18,7 @@ import traceback
 from urllib.parse import urlparse
 from typing import Any, Callable, Dict, Optional, Union, List
 
+import asyncio
 import flask
 
 from importlib_metadata import version as _get_distribution_version
@@ -149,6 +150,7 @@ def _get_traceback(secret, error: Exception):
     def _get_skip(error):
         from dash._callback import (  # pylint: disable=import-outside-toplevel
             _invoke_callback,
+            _async_invoke_callback,
         )
 
         tb = error.__traceback__
@@ -156,7 +158,10 @@ def _get_traceback(secret, error: Exception):
         while tb.tb_next is not None:
             skip += 1
             tb = tb.tb_next
-            if tb.tb_frame.f_code is _invoke_callback.__code__:
+            if tb.tb_frame.f_code in [
+                _invoke_callback.__code__,
+                _async_invoke_callback.__code__,
+            ]:
                 return skip
 
         return skip
@@ -164,11 +169,15 @@ def _get_traceback(secret, error: Exception):
     def _do_skip(error):
         from dash._callback import (  # pylint: disable=import-outside-toplevel
             _invoke_callback,
+            _async_invoke_callback,
         )
 
         tb = error.__traceback__
         while tb.tb_next is not None:
-            if tb.tb_frame.f_code is _invoke_callback.__code__:
+            if tb.tb_frame.f_code in [
+                _invoke_callback.__code__,
+                _async_invoke_callback.__code__,
+            ]:
                 return tb.tb_next
             tb = tb.tb_next
         return error.__traceback__
@@ -190,6 +199,14 @@ def _get_traceback(secret, error: Exception):
 
 # Singleton signal to not update an output, alternative to PreventUpdate
 no_update = _callback.NoUpdate()  # pylint: disable=protected-access
+
+
+async def execute_async_function(func, *args, **kwargs):
+    # Check if the function is a coroutine function
+    if asyncio.iscoroutinefunction(func):
+        return await func(*args, **kwargs)
+    # If the function is not a coroutine, call it directly
+    return func(*args, **kwargs)
 
 
 # pylint: disable=too-many-instance-attributes
@@ -375,6 +392,10 @@ class Dash:
         an exception is raised. Receives the exception object as first argument.
         The callback_context can be used to access the original callback inputs,
         states and output.
+
+    :param use_async: When True, the app will create async endpoints, as a dev,
+        they will be responsible for installing the `flask[async]` dependency.
+    :type use_async: boolean
     """
 
     _plotlyjs_url: str
@@ -422,8 +443,25 @@ class Dash:
         routing_callback_inputs: Optional[Dict[str, Union[Input, State]]] = None,
         description: Optional[str] = None,
         on_error: Optional[Callable[[Exception], Any]] = None,
+        use_async: Optional[bool] = None,
         **obsolete,
     ):
+
+        if use_async is None:
+            try:
+                import asgiref  # pylint: disable=unused-import, import-outside-toplevel # noqa
+
+                use_async = True
+            except ImportError:
+                pass
+        elif use_async:
+            try:
+                import asgiref  # pylint: disable=unused-import, import-outside-toplevel # noqa
+            except ImportError as exc:
+                raise Exception(
+                    "You are trying to use dash[async] without having installed the requirements please install via: `pip install dash[async]`"
+                ) from exc
+
         _validate.check_obsolete(obsolete)
 
         caller_name = None if name else get_caller_name()
@@ -535,6 +573,7 @@ class Dash:
         self.validation_layout = None
         self._on_error = on_error
         self._extra_components = []
+        self._use_async = use_async
 
         self._setup_dev_tools()
         self._hot_reload = AttributeDict(
@@ -672,7 +711,10 @@ class Dash:
         )
         self._add_url("_dash-layout", self.serve_layout)
         self._add_url("_dash-dependencies", self.dependencies)
-        self._add_url("_dash-update-component", self.dispatch, ["POST"])
+        if self._use_async:
+            self._add_url("_dash-update-component", self.async_dispatch, ["POST"])
+        else:
+            self._add_url("_dash-update-component", self.dispatch, ["POST"])
         self._add_url("_reload-hash", self.serve_reload_hash)
         self._add_url("_favicon.ico", self._serve_default_favicon)
         self._add_url("", self.index)
@@ -1267,36 +1309,30 @@ class Dash:
         )
 
     # pylint: disable=R0915
-    def dispatch(self):
-        body = flask.request.get_json()
-
+    def _initialize_context(self, body):
+        """Initialize the global context for the request."""
         g = AttributeDict({})
-
-        g.inputs_list = inputs = body.get(  # pylint: disable=assigning-non-slot
-            "inputs", []
-        )
-        g.states_list = state = body.get(  # pylint: disable=assigning-non-slot
-            "state", []
-        )
-        output = body["output"]
-        outputs_list = body.get("outputs")
-        g.outputs_list = outputs_list  # pylint: disable=assigning-non-slot
-
-        g.input_values = (  # pylint: disable=assigning-non-slot
-            input_values
-        ) = inputs_to_dict(inputs)
-        g.state_values = inputs_to_dict(state)  # pylint: disable=assigning-non-slot
-        changed_props = body.get("changedPropIds", [])
-        g.triggered_inputs = [  # pylint: disable=assigning-non-slot
-            {"prop_id": x, "value": input_values.get(x)} for x in changed_props
+        g.inputs_list = body.get("inputs", [])
+        g.states_list = body.get("state", [])
+        g.outputs_list = body.get("outputs", [])
+        g.input_values = inputs_to_dict(g.inputs_list)
+        g.state_values = inputs_to_dict(g.states_list)
+        g.triggered_inputs = [
+            {"prop_id": x, "value": g.input_values.get(x)}
+            for x in body.get("changedPropIds", [])
         ]
+        g.dash_response = flask.Response(mimetype="application/json")
+        g.cookies = dict(**flask.request.cookies)
+        g.headers = dict(**flask.request.headers)
+        g.path = flask.request.full_path
+        g.remote = flask.request.remote_addr
+        g.origin = flask.request.origin
+        g.updated_props = {}
+        return g
 
-        response = (
-            g.dash_response  # pylint: disable=assigning-non-slot
-        ) = flask.Response(mimetype="application/json")
-
-        args = inputs_to_vals(inputs + state)
-
+    def _prepare_callback(self, g, body):
+        """Prepare callback-related data."""
+        output = body["output"]
         try:
             cb = self.callback_map[output]
             func = cb["callback"]
@@ -1307,85 +1343,104 @@ class Dash:
 
             # Add args_grouping
             inputs_state_indices = cb["inputs_state_indices"]
-            inputs_state = inputs + state
-            inputs_state = convert_to_AttributeDict(inputs_state)
+            inputs_state = convert_to_AttributeDict(g.inputs_list + g.states_list)
 
             if cb.get("no_output"):
-                outputs_list = []
-            elif not outputs_list:
-                # FIXME Old renderer support?
+                g.outputs_list = []
+            elif not g.outputs_list:
+                # Legacy support for older renderers
                 split_callback_id(output)
 
-            # update args_grouping attributes
+            # Update args_grouping attributes
             for s in inputs_state:
                 # check for pattern matching: list of inputs or state
                 if isinstance(s, list):
                     for pattern_match_g in s:
-                        update_args_group(pattern_match_g, changed_props)
-                update_args_group(s, changed_props)
+                        update_args_group(
+                            pattern_match_g, body.get("changedPropIds", [])
+                        )
+                update_args_group(s, body.get("changedPropIds", []))
 
-            args_grouping = map_grouping(
-                lambda ind: inputs_state[ind], inputs_state_indices
+            g.args_grouping, g.using_args_grouping = self._prepare_grouping(
+                inputs_state, inputs_state_indices
             )
-
-            g.args_grouping = args_grouping  # pylint: disable=assigning-non-slot
-            g.using_args_grouping = (  # pylint: disable=assigning-non-slot
-                not isinstance(inputs_state_indices, int)
-                and (
-                    inputs_state_indices
-                    != list(range(grouping_len(inputs_state_indices)))
-                )
+            g.outputs_grouping, g.using_outputs_grouping = self._prepare_grouping(
+                g.outputs_list, cb.get("outputs_indices", [])
             )
+        except KeyError as e:
+            raise KeyError(f"Callback function not found for output '{output}'.") from e
+        return func
 
-            # Add outputs_grouping
-            outputs_indices = cb["outputs_indices"]
-            if not isinstance(outputs_list, list):
-                flat_outputs = [outputs_list]
-            else:
-                flat_outputs = outputs_list
+    def _prepare_grouping(self, data_list, indices):
+        """Prepare grouping logic for inputs or outputs."""
+        if not isinstance(data_list, list):
+            flat_data = [data_list]
+        else:
+            flat_data = data_list
 
-            if len(flat_outputs) > 0:
-                outputs_grouping = map_grouping(
-                    lambda ind: flat_outputs[ind], outputs_indices
-                )
-                g.outputs_grouping = (
-                    outputs_grouping  # pylint: disable=assigning-non-slot
-                )
-                g.using_outputs_grouping = (  # pylint: disable=assigning-non-slot
-                    not isinstance(outputs_indices, int)
-                    and outputs_indices != list(range(grouping_len(outputs_indices)))
-                )
-            else:
-                g.outputs_grouping = []
-                g.using_outputs_grouping = []
-            g.updated_props = {}
+        if len(flat_data) > 0:
+            grouping = map_grouping(lambda ind: flat_data[ind], indices)
+            using_grouping = not isinstance(indices, int) and indices != list(
+                range(grouping_len(indices))
+            )
+        else:
+            grouping, using_grouping = [], False
 
-            g.cookies = dict(**flask.request.cookies)
-            g.headers = dict(**flask.request.headers)
-            g.path = flask.request.full_path
-            g.remote = flask.request.remote_addr
-            g.origin = flask.request.origin
+        return grouping, using_grouping
 
-        except KeyError as missing_callback_function:
-            msg = f"Callback function not found for output '{output}', perhaps you forgot to prepend the '@'?"
-            raise KeyError(msg) from missing_callback_function
+    def _execute_callback(self, func, args, outputs_list, g):
+        """Execute the callback with the prepared arguments."""
+        # noinspection PyArgumentList
+        partial_func = functools.partial(
+            func,
+            *args,
+            outputs_list=outputs_list,
+            long_callback_manager=g.background_callback_manager,
+            callback_context=g,
+            app=self,
+            app_on_error=self._on_error,
+            app_use_async=self._use_async,
+        )
+        return partial_func
+
+    async def async_dispatch(self):
+        body = flask.request.get_json()
+        g = self._initialize_context(body)
+        func = self._prepare_callback(g, body)
+        args = inputs_to_vals(g.inputs_list + g.states_list)
 
         ctx = copy_context()
-        # noinspection PyArgumentList
-        response.set_data(
-            ctx.run(
-                functools.partial(
-                    func,
-                    *args,
-                    outputs_list=outputs_list,
-                    long_callback_manager=self._background_manager,
-                    callback_context=g,
-                    app=self,
-                    app_on_error=self._on_error,
-                )
+        partial_func = self._execute_callback(func, args, g.outputs_list, g)
+        if asyncio.iscoroutine(func):
+            response_data = await ctx.run(partial_func)
+        else:
+            response_data = ctx.run(partial_func)
+
+        if asyncio.iscoroutine(response_data):
+            response_data = await response_data
+
+        g.dash_response.set_data(response_data)
+        return g.dash_response
+
+    def dispatch(self):
+        body = flask.request.get_json()
+        g = self._initialize_context(body)
+        func = self._prepare_callback(g, body)
+        args = inputs_to_vals(g.inputs_list + g.states_list)
+
+        ctx = copy_context()
+        partial_func = self._execute_callback(func, args, g.outputs_list, g)
+        response_data = ctx.run(partial_func)
+
+        if asyncio.iscoroutine(response_data):
+            raise Exception(
+                "You are trying to use a coroutine without dash[async]. "
+                "Please install the dependencies via `pip install dash[async]` and ensure "
+                "that `use_async=False` is not being passed to the app."
             )
-        )
-        return response
+
+        g.dash_response.set_data(response_data)
+        return g.dash_response
 
     def _setup_server(self):
         if self._got_first_request["setup_server"]:
@@ -2234,65 +2289,133 @@ class Dash:
             }
             inputs.update(self.routing_callback_inputs)
 
-            @self.callback(
-                Output(_ID_CONTENT, "children"),
-                Output(_ID_STORE, "data"),
-                inputs=inputs,
-                prevent_initial_call=True,
-            )
-            def update(pathname_, search_, **states):
-                """
-                Updates dash.page_container layout on page navigation.
-                Updates the stored page title which will trigger the clientside callback to update the app title
-                """
+            if self._use_async:
 
-                query_parameters = _parse_query_string(search_)
-                page, path_variables = _path_to_page(
-                    self.strip_relative_path(pathname_)
+                @self.callback(
+                    Output(_ID_CONTENT, "children"),
+                    Output(_ID_STORE, "data"),
+                    inputs=inputs,
+                    prevent_initial_call=True,
                 )
+                async def update(pathname_, search_, **states):
+                    """
+                    Updates dash.page_container layout on page navigation.
+                    Updates the stored page title which will trigger the clientside callback to update the app title
+                    """
 
-                # get layout
-                if page == {}:
-                    for module, page in _pages.PAGE_REGISTRY.items():
-                        if module.split(".")[-1] == "not_found_404":
-                            layout = page["layout"]
-                            title = page["title"]
-                            break
-                    else:
-                        layout = html.H1("404 - Page not found")
-                        title = self.title
-                else:
-                    layout = page.get("layout", "")
-                    title = page["title"]
-
-                if callable(layout):
-                    layout = (
-                        layout(**path_variables, **query_parameters, **states)
-                        if path_variables
-                        else layout(**query_parameters, **states)
+                    query_parameters = _parse_query_string(search_)
+                    page, path_variables = _path_to_page(
+                        self.strip_relative_path(pathname_)
                     )
-                if callable(title):
-                    title = title(**path_variables) if path_variables else title()
 
-                return layout, {"title": title}
+                    # get layout
+                    if page == {}:
+                        for module, page in _pages.PAGE_REGISTRY.items():
+                            if module.split(".")[-1] == "not_found_404":
+                                layout = page["layout"]
+                                title = page["title"]
+                                break
+                        else:
+                            layout = html.H1("404 - Page not found")
+                            title = self.title
+                    else:
+                        layout = page.get("layout", "")
+                        title = page["title"]
 
-            _validate.check_for_duplicate_pathnames(_pages.PAGE_REGISTRY)
-            _validate.validate_registry(_pages.PAGE_REGISTRY)
+                    if callable(layout):
+                        layout = await execute_async_function(
+                            layout,
+                            **{**(path_variables or {}), **query_parameters, **states},
+                        )
+                    if callable(title):
+                        title = await execute_async_function(
+                            title, **(path_variables or {})
+                        )
 
-            # Set validation_layout
-            if not self.config.suppress_callback_exceptions:
-                self.validation_layout = html.Div(
-                    [
-                        page["layout"]() if callable(page["layout"]) else page["layout"]
-                        for page in _pages.PAGE_REGISTRY.values()
-                    ]
-                    + [
-                        # pylint: disable=not-callable
-                        self.layout()
-                        if callable(self.layout)
-                        else self.layout
-                    ]
+                    return layout, {"title": title}
+
+                _validate.check_for_duplicate_pathnames(_pages.PAGE_REGISTRY)
+                _validate.validate_registry(_pages.PAGE_REGISTRY)
+
+                # Set validation_layout
+                if not self.config.suppress_callback_exceptions:
+                    self.validation_layout = html.Div(
+                        [
+                            asyncio.run(execute_async_function(page["layout"]))
+                            if callable(page["layout"])
+                            else page["layout"]
+                            for page in _pages.PAGE_REGISTRY.values()
+                        ]
+                        + [
+                            # pylint: disable=not-callable
+                            self.layout()
+                            if callable(self.layout)
+                            else self.layout
+                        ]
+                    )
+                if _ID_CONTENT not in self.validation_layout:
+                    raise Exception("`dash.page_container` not found in the layout")
+            else:
+
+                @self.callback(
+                    Output(_ID_CONTENT, "children"),
+                    Output(_ID_STORE, "data"),
+                    inputs=inputs,
+                    prevent_initial_call=True,
                 )
+                def update(pathname_, search_, **states):
+                    """
+                    Updates dash.page_container layout on page navigation.
+                    Updates the stored page title which will trigger the clientside callback to update the app title
+                    """
+
+                    query_parameters = _parse_query_string(search_)
+                    page, path_variables = _path_to_page(
+                        self.strip_relative_path(pathname_)
+                    )
+
+                    # get layout
+                    if page == {}:
+                        for module, page in _pages.PAGE_REGISTRY.items():
+                            if module.split(".")[-1] == "not_found_404":
+                                layout = page["layout"]
+                                title = page["title"]
+                                break
+                        else:
+                            layout = html.H1("404 - Page not found")
+                            title = self.title
+                    else:
+                        layout = page.get("layout", "")
+                        title = page["title"]
+
+                    if callable(layout):
+                        layout = layout(
+                            **{**(path_variables or {}), **query_parameters, **states}
+                        )
+                    if callable(title):
+                        title = title(**(path_variables or {}))
+
+                    return layout, {"title": title}
+
+                _validate.check_for_duplicate_pathnames(_pages.PAGE_REGISTRY)
+                _validate.validate_registry(_pages.PAGE_REGISTRY)
+
+                # Set validation_layout
+                if not self.config.suppress_callback_exceptions:
+                    self.validation_layout = html.Div(
+                        [
+                            page["layout"]()
+                            if callable(page["layout"])
+                            else page["layout"]
+                            for page in _pages.PAGE_REGISTRY.values()
+                        ]
+                        + [
+                            # pylint: disable=not-callable
+                            self.layout()
+                            if callable(self.layout)
+                            else self.layout
+                        ]
+                    )
                 if _ID_CONTENT not in self.validation_layout:
                     raise Exception("`dash.page_container` not found in the layout")
 
