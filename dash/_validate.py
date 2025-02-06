@@ -3,6 +3,9 @@ from collections.abc import MutableSequence
 import re
 from textwrap import dedent
 from keyword import iskeyword
+from typing import Any
+from typing_extensions import Final
+
 import flask
 
 from ._grouping import grouping_len, map_grouping
@@ -15,6 +18,8 @@ from ._utils import (
     coerce_to_list,
     clean_property_name,
 )
+
+TRUNCATE_AT: Final[int] = 100
 
 
 def validate_callback(outputs, inputs, state, extra_args, types):
@@ -210,11 +215,23 @@ def validate_multi_return(output_lists, output_values, callback_id):
                 )
 
 
+def truncate_object(obj: Any, at: int) -> str:
+    """Return a truncated string representation of an object."""
+    obj_stringified = str(obj)
+    size = len(obj_stringified)
+
+    if size <= at:
+        return obj_stringified
+
+    return obj_stringified[:at] + f"... (truncated - {size} characters total)"
+
+
 def fail_callback_output(output_value, output):
     valid_children = (str, int, float, type(None), Component)
     valid_props = (str, int, float, type(None), tuple, MutableSequence)
 
     def _raise_invalid(bad_val, outer_val, path, index=None, toplevel=False):
+        bad_val_stringified = truncate_object(bad_val, TRUNCATE_AT)
         bad_type = type(bad_val).__name__
         outer_id = f"(id={outer_val.id:s})" if getattr(outer_val, "id", False) else ""
         outer_type = type(outer_val).__name__
@@ -245,7 +262,7 @@ def fail_callback_output(output_value, output):
 
                 {location}
                 and has string representation
-                `{bad_val}`
+                `{bad_val_stringified}`
 
                 In general, Dash properties can only be
                 dash components, strings, dictionaries, numbers, None,

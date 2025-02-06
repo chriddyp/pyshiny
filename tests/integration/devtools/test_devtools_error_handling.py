@@ -1,5 +1,5 @@
 # -*- coding: UTF-8 -*-
-from dash import Dash, Input, Output, html, dcc
+from dash import _validate, Dash, Input, Output, html, dcc
 from dash.exceptions import PreventUpdate
 
 
@@ -260,3 +260,86 @@ def test_dveh005_multiple_outputs(dash_duo):
     dash_duo.wait_for_text_to_equal(dash_duo.devtools_error_count_locator, "1")
     dash_duo.find_element(".test-devtools-error-toggle").click()
     dash_duo.percy_snapshot("devtools - multi output Python exception - open")
+
+
+def test_dveh006_truncate_callback(dash_duo):
+    app = Dash(__name__)
+
+    from dataclasses import dataclass
+    from typing import List, Dict, Any
+
+    @dataclass
+    class GenericItemA:
+        attribute_1: int
+        attribute_2: str
+
+    @dataclass
+    class GenericItemB:
+        key: str
+        value: List[str]
+
+    @dataclass
+    class GenericItemC:
+        identifier: int
+        description: str
+
+    @dataclass
+    class GenericOptions:
+        option_key: str
+        option_value: Any
+
+    @dataclass
+    class GenericDataModel:
+        ItemListA: List[GenericItemA]
+        SingleItemB: GenericItemB
+        NestedItemListC: List[List[GenericItemC]]
+        Options: GenericOptions
+        Metadata: Dict
+        AdditionalInfo: Any
+
+    app.layout = html.P(id="output")
+
+    @app.callback(Output("output", "children"), Input("url", "href"))
+    def get_width(_):
+        item_list_a = [
+            GenericItemA(attribute_1=123, attribute_2="Alpha"),
+            GenericItemA(attribute_1=456, attribute_2="Beta")
+        ]
+
+        single_item_b = GenericItemB(key="Key1", value=["Item1", "Item2"])
+
+        nested_item_list_c = [
+            [GenericItemC(identifier=101, description="Description1")],
+            [GenericItemC(identifier=102, description="Description2")]
+        ]
+
+        generic_options = GenericOptions(option_key="Option1", option_value="Value1")
+
+        generic_metadata = {"meta_key": "meta_value"}
+
+        additional_info = "Generic information"
+
+        # Creating an instance of GenericDataModel
+        generic_data_model = GenericDataModel(
+            ItemListA=item_list_a,
+            SingleItemB=single_item_b,
+            NestedItemListC=nested_item_list_c,
+            Options=generic_options,
+            Metadata=generic_metadata,
+            AdditionalInfo=additional_info
+        )
+
+        return generic_data_model
+
+    dash_duo.start_server(
+        app,
+        debug=True,
+        use_reloader=False,
+        use_debugger=True,
+        dev_tools_hot_reload=False,
+    )
+
+    dash_duo.find_element(".dash-debug-menu").click()
+    dash_duo.wait_for_text_to_equal(dash_duo.devtools_error_count_locator, "1")
+
+    assert len(get_error_html(dash_duo, 0)) == _validate.TRUNCATE_AT
