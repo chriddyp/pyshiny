@@ -1,8 +1,20 @@
-.dash-dropdown .Select-menu-outer {
-    z-index: 1000;
-    max-height: none;
+.dash-dropdown .Select-control {
+    display: inline-block;
+    width: 300px;
+    vertical-align: middle;
+    margin-left: 785px;
 }
 
 .dash-dropdown .Select-menu {
     max-height: none;
+    display: inline-block;
+    width: 300px;
+    vertical-align: middle;
+}
+
+.dash-dropdown .Select-menu-outer {
+    z-index: 1000;
+    max-height: none;
+    width: 300px;
+    margin-left: 785px;
 }
