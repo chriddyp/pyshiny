@@ -176,7 +176,7 @@ def test_cblp001_radio_buttons_callbacks_generating_children(dash_duo):
                     + "#{}-graph:not(.dash-graph--pending) .js-plotly-plot".format(
                         chapter
                     )
-                    + '").layout.title'
+                    + '").layout.title.text'
                 )
                 == value
             ),
