@@ -442,7 +442,9 @@ def register_callback(
                     progress = callback_manager.get_progress(cache_key)
                     if progress:
                         response["progress"] = {
-                            str(x): progress[i] for i, x in enumerate(progress_outputs)
+                            str(x): progress[i]
+                            for i, x in enumerate(progress_outputs)
+                            if not isinstance(progress[i], NoUpdate)
                         }
 
                 output_value = callback_manager.get_result(cache_key, job_id)
