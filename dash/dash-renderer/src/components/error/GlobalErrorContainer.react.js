@@ -12,7 +12,11 @@ class UnconnectedGlobalErrorContainer extends Component {
         const {config, error, children} = this.props;
         return (
             <div id='_dash-global-error-container'>
-                <DebugMenu error={error} hotReload={Boolean(config.hot_reload)}>
+                <DebugMenu
+                    config={config}
+                    error={error}
+                    hotReload={Boolean(config.hot_reload)}
+                >
                     <div id='_dash-app-content'>{children}</div>
                 </DebugMenu>
             </div>
