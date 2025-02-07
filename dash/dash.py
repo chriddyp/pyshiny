@@ -226,6 +226,10 @@ class Dash:
         Default ``'pages'``.
     :type pages_folder: string or pathlib.Path
 
+    :param root_path: root path for pages of a multi-page app.
+        Default ``'None'``.
+    :type root_path: string or pathlib.Path
+
     :param use_pages: When True, the ``pages`` feature for multi-page apps is
         enabled. If you set a non-default ``pages_folder`` this will be inferred
         to be True. Default `None`.
@@ -388,6 +392,7 @@ class Dash:
         server: Union[bool, flask.Flask] = True,
         assets_folder: str = "assets",
         pages_folder: str = "pages",
+        root_path: Optional[str] = None,
         use_pages: Optional[bool] = None,
         assets_url_path: str = "assets",
         assets_ignore: str = "",
@@ -454,7 +459,7 @@ class Dash:
             assets_external_path=get_combined_config(
                 "assets_external_path", assets_external_path, ""
             ),
-            pages_folder=pages_folder_config(name, pages_folder, use_pages),
+            pages_folder=pages_folder_config(name, pages_folder, use_pages, root_path),
             eager_loading=eager_loading,
             include_assets_files=get_combined_config(
                 "include_assets_files", include_assets_files, True
