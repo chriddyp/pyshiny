@@ -184,16 +184,23 @@ export default class Input extends PureComponent {
 
     onChange() {
         const {debounce} = this.props;
-        if (debounce) {
-            if (Number.isFinite(debounce)) {
-                this.debounceEvent(debounce);
+        const input = this.input.current;
+        const cursorPosition = input.selectionStart;
+        const currentValue = input.value;
+        this.setState({value: currentValue}, () => {
+            if (debounce) {
+                if (Number.isFinite(debounce)) {
+                    this.debounceEvent(debounce);
+                }
+                if (this.props.type !== 'number') {
+                    setTimeout(() => {
+                        input.setSelectionRange(cursorPosition, cursorPosition);
+                    }, 0);
+                }
+            } else {
+                this.onEvent();
             }
-            if (this.props.type !== 'number') {
-                this.setState({value: this.input.current.value});
-            }
-        } else {
-            this.onEvent();
-        }
+        });
     }
 }
 
