@@ -84,3 +84,26 @@ def test_inni010_valid_numbers(dash_dcc, ninput_app):
         dash_dcc.clear_input(elem)
 
     assert dash_dcc.get_logs() == []
+
+
+def test_currency_format(dash_dcc, ninput_app):
+    dash_dcc.start_server(ninput_app)
+    elem = dash_dcc.find_element("#input_currency")
+
+    elem.send_keys("1234.56")
+    elem.send_keys(Keys.TAB)
+
+    assert dash_dcc.wait_for_text_to_equal(
+        "#div_currency", "$1234.56"
+    ), "the input value should be formatted with a currency symbol"
+
+    dash_dcc.clear_input(elem)
+
+    elem.send_keys("1000")
+    elem.send_keys(Keys.TAB)
+
+    assert dash_dcc.wait_for_text_to_equal(
+        "#div_currency", "$1000.00"
+    ), "the input value should be formatted with a currency symbol"
+
+    assert dash_dcc.get_logs() == []
