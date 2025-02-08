@@ -5,7 +5,7 @@ lxml>=4.6.2
 percy>=2.0.2
 pytest>=6.0.2
 requests[security]>=2.21.0
-selenium>=3.141.0,<=4.2.0
+selenium>=3.141.0,<=4.6.1
 waitress>=1.4.4
 multiprocess>=0.70.12
 psutil>=5.8.0
