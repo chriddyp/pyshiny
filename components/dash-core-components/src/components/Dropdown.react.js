@@ -119,6 +119,12 @@ Dropdown.propTypes = {
     multi: PropTypes.bool,
 
     /**
+     * If false and multi=true, then selecting a value will leave the menu open
+     * to select more values
+     */
+    close_on_select: PropTypes.bool,
+
+    /**
      * Whether or not the dropdown is "clearable", that is, whether or
      * not a small "x" appears on the right of the dropdown that removes
      * the selected value.
@@ -229,6 +235,7 @@ Dropdown.defaultProps = {
     clearable: true,
     disabled: false,
     multi: false,
+    close_on_select: true,
     searchable: true,
     optionHeight: 35,
     maxHeight: 200,
