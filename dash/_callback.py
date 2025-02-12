@@ -1,6 +1,7 @@
 import collections
 import hashlib
 from functools import wraps
+import importlib
 from typing import Callable, Optional, Any
 
 import flask
@@ -32,6 +33,7 @@ from ._utils import (
     coerce_to_list,
     AttributeDict,
     clean_property_name,
+    get_caller_name,
 )
 
 from . import _validate
@@ -618,7 +620,13 @@ def register_clientside_callback(
     # If JS source is explicitly given, create a namespace and function
     # name, then inject the code.
     if isinstance(clientside_function, str):
-        namespace = "_dashprivate_clientside_funcs"
+
+        # Namespace need to be unique and deterministic.
+        # Generate the hash from the caller filename.
+        caller = get_caller_name()
+        module = importlib.import_module(caller)
+        namespace = hashlib.sha256(module.__file__.encode("utf-8")).hexdigest()
+
         # Create a hash from the function, it will be the same always
         function_name = hashlib.sha256(clientside_function.encode("utf-8")).hexdigest()
 
