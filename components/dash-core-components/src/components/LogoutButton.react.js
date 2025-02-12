@@ -1,120 +1,73 @@
+
+/**remove dcc.logoutbutton completely and
+used fetch API to send a POST request to/logout and handle logout action using 
+javascript without a form and styled the button while keeping it functional
+
 import React from 'react';
 import PropTypes from 'prop-types';
 
 import './css/logout.css';
 
 /**
- * Logout button to submit a form post request to the `logout_url` prop.
- * Usage is intended for dash-deployment-server authentication.
- *
- * DDS usage:
- *
- * `dcc.LogoutButton(logout_url=os.getenv('DASH_LOGOUT_URL'))`
- *
- * Custom usage:
- *
- * - Implement a login mechanism.
- * - Create a flask route with a post method handler.
- * `@app.server.route('/logout', methods=['POST'])`
- *   - The logout route should perform what's necessary for the user to logout.
- *   - If you store the session in a cookie, clear the cookie:
- *   `rep = flask.Response(); rep.set_cookie('session', '', expires=0)`
- *
- * - Create a logout button component and assign it the logout_url
- * `dcc.LogoutButton(logout_url='/logout')`
- *
- * See https://dash.plotly.com/dash-core-components/logout_button
- * for more documentation and examples.
+ * LogoutButton component to handle user logout.
+ * Sends a POST request to the provided `logoutUrl` when clicked.
  */
 export default class LogoutButton extends React.Component {
-    render() {
-        const {id, logout_url, label, className, style, method, loading_state} =
-            this.props;
+    constructor(props) {
+        super(props);
+        this.handleLogout = this.handleLogout.bind(this);
+    }
 
-        let url, submitMethod;
-        if (!logout_url) {
-            url =
-                logout_url ||
-                'https://dash.plotly.com/dash-core-components/logout_button';
-            submitMethod = 'get';
-        } else {
-            url = logout_url;
-            submitMethod = method;
-        }
+    handleLogout() {
+        const { logoutUrl, onLogout } = this.props;
+
+        fetch(logoutUrl, { method: 'POST', credentials: 'include' })
+            .then(response => {
+                if (response.ok) {
+                    if (onLogout) {
+                        onLogout(); // Trigger callback if provided
+                    } else {
+                        window.location.href = '/'; // Redirect to home by default
+                    }
+                } else {
+                    console.error('Logout failed:', response.statusText);
+                }
+            })
+            .catch(error => console.error('Logout error:', error));
+    }
+
+    render() {
+        const { id, label, className, style, loadingState } = this.props;
 
         return (
-            <form
-                data-dash-is-loading={
-                    (loading_state && loading_state.is_loading) || undefined
-                }
-                action={url}
-                method={submitMethod}
-                className="dash-logout-frame"
+            <button
+                id={id}
+                className={`dash-logout-btn ${className || ''}`}
+                style={style}
+                onClick={this.handleLogout}
+                disabled={loadingState && loadingState.is_loading}
             >
-                <button
-                    className={`dash-logout-btn ${className || ''}`}
-                    style={style}
-                    id={id}
-                    type="submit"
-                >
-                    {label}
-                </button>
-            </form>
+                {label}
+            </button>
         );
     }
 }
 
+// Default Props
 LogoutButton.defaultProps = {
     label: 'Logout',
-    method: 'post',
+    logoutUrl: '/logout', // Default logout endpoint
 };
 
+// Prop Types
 LogoutButton.propTypes = {
-    /**
-     * Id of the button.
-     */
     id: PropTypes.string,
-
-    /**
-     * Text of the button
-     */
     label: PropTypes.string,
-    /**
-     * Url to submit a post logout request.
-     */
-    logout_url: PropTypes.string,
-    /**
-     * Style of the button
-     */
-    style: PropTypes.object,
-    /**
-     * Http method to submit the logout form.
-     */
-    method: PropTypes.string,
-    /**
-     * CSS class for the button.
-     */
+    logoutUrl: PropTypes.string.isRequired,
     className: PropTypes.string,
-    /**
-     * Dash-assigned callback that gets fired when the value changes.
-     */
-    setProps: PropTypes.func,
-
-    /**
-     * Object that holds the loading state object coming from dash-renderer
-     */
-    loading_state: PropTypes.shape({
-        /**
-         * Determines if the component is loading or not
-         */
+    style: PropTypes.object,
+    onLogout: PropTypes.func, // Callback after logout
+    loadingState: PropTypes.shape({
         is_loading: PropTypes.bool,
-        /**
-         * Holds which property is loading
-         */
-        prop_name: PropTypes.string,
-        /**
-         * Holds the name of the component that is loading
-         */
-        component_name: PropTypes.string,
     }),
 };
