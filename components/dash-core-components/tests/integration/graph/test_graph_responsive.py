@@ -1,3 +1,5 @@
+import numpy as np
+import plotly.graph_objects as go
 import pytest
 
 from dash import Dash, Input, Output, State, dcc, html
@@ -130,6 +132,36 @@ def test_grrs001_graph(dash_dcc, responsive, autosize, height, width, is_respons
     wait.until(
         lambda: dash_dcc.wait_for_element("#graph svg.main-svg").size.get("height", -1)
         == resize_height,
+        3,
+    )
+
+    assert dash_dcc.get_logs() == []
+
+
+def test_grrs002_responsive_parent_height(dash_dcc):
+    app = Dash(__name__, eager_loading=True)
+
+    x, y = np.random.uniform(size=50), np.random.uniform(size=50)
+
+    fig = go.Figure(
+        data=[go.Scattergl(x=x, y=y, mode="markers")],
+        layout=dict(margin=dict(l=0, r=0, t=0, b=0), height=600, width=600),
+    )
+
+    app.layout = html.Div(
+        dcc.Graph(
+            id="graph",
+            figure=fig,
+            responsive=True,
+        ),
+        style={"borderStyle": "solid", "height": 300, "width": 100},
+    )
+
+    dash_dcc.start_server(app)
+
+    wait.until(
+        lambda: dash_dcc.wait_for_element("#graph svg.main-svg").size.get("height", -1)
+        == 300,
         3,
     )
 
