@@ -12,6 +12,8 @@ import {
 } from 'ramda';
 
 import {IStoreState} from '../store';
+import {ThunkDispatch} from 'redux-thunk';
+import {AnyAction} from 'redux';
 
 import {
     aggregateCallbacks,
@@ -44,7 +46,11 @@ const observer: IStoreObserverDefinition<IStoreState> = {
             callbacks: {executed}
         } = getState();
 
-        function applyProps(id: any, updatedProps: any) {
+        function applyProps(
+            id: any,
+            updatedProps: any,
+            enable_persistence: boolean
+        ) {
             const {layout, paths} = getState();
             const itempath = getPath(paths, id);
             if (!itempath) {
@@ -57,18 +63,22 @@ const observer: IStoreObserverDefinition<IStoreState> = {
             updatedProps = prunePersistence(
                 path(itempath, layout),
                 updatedProps,
-                dispatch
+                dispatch,
+                enable_persistence
             );
 
-            // In case the update contains whole components, see if any of
-            // those components have props to update to persist user edits.
-            const {props} = applyPersistence({props: updatedProps}, dispatch);
+            const {props} = applyPersistence(
+                {props: updatedProps},
+                dispatch,
+                enable_persistence
+            );
 
-            dispatch(
+            (dispatch as ThunkDispatch<any, any, AnyAction>)(
                 updateProps({
                     itempath,
                     props,
-                    source: 'response'
+                    source: 'response',
+                    enable_persistence
                 })
             );
 
@@ -102,8 +112,17 @@ const observer: IStoreObserverDefinition<IStoreState> = {
                             paths: oldPaths
                         } = getState();
 
+                        const enable_persistence =
+                            cb.callback.enable_persistence === undefined
+                                ? false
+                                : cb.callback.enable_persistence;
+
                         // Components will trigger callbacks on their own as required (eg. derived)
-                        const appliedProps = applyProps(parsedId, props);
+                        const appliedProps = applyProps(
+                            parsedId,
+                            props,
+                            enable_persistence
+                        );
 
                         // Add callbacks for modified inputs
                         requestedCallbacks = concat(
