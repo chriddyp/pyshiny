@@ -23,7 +23,7 @@
   "dependencies": {
     "@babel/polyfill": "^7.12.1",
     "@plotly/dash-component-plugins": "^1.2.3",
-    "cookie": "^0.6.0",
+    "cookie": "^0.7.0",
     "cytoscape": "^3.29.2",
     "cytoscape-dagre": "^2.5.0",
     "cytoscape-fcose": "^2.2.0",
