@@ -1,5 +1,5 @@
 Flask>=1.0.4,<3.1
-Werkzeug<3.1
+Werkzeug>=3.0.6
 plotly>=5.0.0
 dash_html_components==2.0.0
 dash_core_components==2.0.0
