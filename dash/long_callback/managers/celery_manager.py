@@ -1,6 +1,8 @@
 import json
 import traceback
 from contextvars import copy_context
+import asyncio
+from functools import partial
 
 from _plotly_utils.utils import PlotlyJSONEncoder
 
@@ -135,11 +137,13 @@ CeleryLongCallbackManager requires extra dependencies which can be installed doi
         return json.loads(updated_props)
 
 
-def _make_job_fn(fn, celery_app, progress, key):
+def _make_job_fn(fn, celery_app, progress, key):  # pylint: disable=too-many-statements
     cache = celery_app.backend
 
     @celery_app.task(name=f"long_callback_{key}")
-    def job_fn(result_key, progress_key, user_callback_args, context=None):
+    def job_fn(
+        result_key, progress_key, user_callback_args, context=None
+    ):  # pylint: disable=too-many-statements
         def _set_progress(progress_value):
             if not isinstance(progress_value, (list, tuple)):
                 progress_value = [progress_value]
@@ -197,7 +201,59 @@ def _make_job_fn(fn, celery_app, progress, key):
                     result_key, json.dumps(user_callback_output, cls=PlotlyJSONEncoder)
                 )
 
-        ctx.run(run)
+        async def async_run():
+            c = AttributeDict(**context)
+            c.ignore_register_page = False
+            c.updated_props = ProxySetProps(_set_props)
+            context_value.set(c)
+            errored = False
+            try:
+                if isinstance(user_callback_args, dict):
+                    user_callback_output = await fn(
+                        *maybe_progress, **user_callback_args
+                    )
+                elif isinstance(user_callback_args, (list, tuple)):
+                    user_callback_output = await fn(
+                        *maybe_progress, *user_callback_args
+                    )
+                else:
+                    user_callback_output = await fn(*maybe_progress, user_callback_args)
+            except PreventUpdate:
+                # Put NoUpdate dict directly to avoid circular imports.
+                errored = True
+                cache.set(
+                    result_key,
+                    json.dumps(
+                        {"_dash_no_update": "_dash_no_update"}, cls=PlotlyJSONEncoder
+                    ),
+                )
+            except Exception as err:  # pylint: disable=broad-except
+                errored = True
+                cache.set(
+                    result_key,
+                    json.dumps(
+                        {
+                            "long_callback_error": {
+                                "msg": str(err),
+                                "tb": traceback.format_exc(),
+                            }
+                        },
+                    ),
+                )
+
+            if asyncio.iscoroutine(user_callback_output):
+                user_callback_output = await user_callback_output
+
+            if not errored:
+                cache.set(
+                    result_key, json.dumps(user_callback_output, cls=PlotlyJSONEncoder)
+                )
+
+        if asyncio.iscoroutinefunction(fn):
+            func = partial(ctx.run, async_run)
+            asyncio.run(func())
+        else:
+            ctx.run(run)
 
     return job_fn
 

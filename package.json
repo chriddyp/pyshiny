@@ -30,7 +30,7 @@
     "private::test.unit-dash": "pytest tests/unit",
     "private::test.unit-renderer": "cd dash/dash-renderer && npm run test",
     "private::test.unit-generation": "cd @plotly/dash-generator-test-component-typescript && npm ci && npm test",
-    "private::test.integration-dash": "TESTFILES=$(circleci tests glob \"tests/integration/**/test_*.py\" | circleci tests split --split-by=timings) && pytest --headless --nopercyfinalize --junitxml=test-reports/junit_intg.xml ${TESTFILES}",
+    "private::test.integration-dash": "TESTFILES=$(circleci tests glob \"tests/integration/**/test_*.py\" | circleci tests split --split-by=timings) && pytest --headless --nopercyfinalize --junitxml=test-reports/junit_intg.xml ${TESTFILES} && python rerun_failed_tests.py",
     "private::test.integration-dash-import": "cd tests/integration/dash && python dash_import_test.py",
     "cibuild": "run-s private::cibuild.*",
     "build": "run-s private::build.*",

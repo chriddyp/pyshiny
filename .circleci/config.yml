@@ -227,6 +227,57 @@ jobs:
       - store_artifacts:
           path: /tmp/dash_artifacts
 
+  test-312-async: &test
+    working_directory: ~/dash
+    docker:
+      - image: cimg/python:3.12.1-browsers
+        auth:
+          username: dashautomation
+          password: $DASH_PAT_DOCKERHUB
+        environment:
+          PERCY_ENABLE: 1
+          PERCY_PARALLEL_TOTAL: -1
+          PUPPETEER_SKIP_CHROMIUM_DOWNLOAD: True
+          PYVERSION: python312
+          REDIS_URL: redis://localhost:6379
+      - image: cimg/redis:6.2.6
+        auth:
+          username: dashautomation
+          password: $DASH_PAT_DOCKERHUB
+    parallelism: 3
+    steps:
+      - checkout:
+          path: ~/dash
+      - run: sudo apt-get update
+      - run: echo $PYVERSION > ver.txt
+      - run: cat requirements/*.txt > requirements-all.txt
+      - restore_cache:
+          key: dep-{{ checksum ".circleci/config.yml" }}-{{ checksum "ver.txt" }}-{{ checksum "requirements-all.txt" }}
+      - browser-tools/install-browser-tools:
+          chrome-version: 120.0.6099.71
+          install-firefox: false
+          install-geckodriver: false
+      - attach_workspace:
+          at: ~/dash
+      - run:
+          name: ️️🏗️ Install package
+          command: |
+            . venv/bin/activate
+            npm ci
+            pip install dash-package/dash-package.tar.gz[async,ci,dev,testing,celery,diskcache] --progress-bar off
+            pip list | grep dash
+      - run:
+          name: 🧪 Run Integration Tests
+          command: |
+            . venv/bin/activate
+            npm run citest.integration
+      - store_artifacts:
+          path: test-reports
+      - store_test_results:
+          path: test-reports
+      - store_artifacts:
+          path: /tmp/dash_artifacts
+
   test-312-react-18:
     <<: *test
     docker:
@@ -653,6 +704,9 @@ workflows:
             - install-dependencies-38
 
       - test-312:
+          requires:
+            - install-dependencies-312
+      - test-312-async:
           requires:
             - install-dependencies-312
       - test-312-react-18:
