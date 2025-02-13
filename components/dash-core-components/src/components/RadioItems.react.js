@@ -48,6 +48,7 @@ export default class RadioItems extends Component {
                         }}
                         className={labelClassName}
                         key={option.value}
+                        title={option.title}
                     >
                         <input
                             checked={option.value === value}
