@@ -1,0 +1,35 @@
+.dash-debug-menu__upgrade-tooltip button,
+.dash-debug-menu__upgrade-tooltip a {
+    background: white;
+    border: none;
+    padding: 2px 5px;
+    white-space: nowrap;
+    color: #7f4bc4;
+    font-size: 10pt;
+    text-decoration: none;
+    font-family: none;
+    cursor: pointer;
+    display: flex;
+}
+
+.dash-debug-menu__upgrade-tooltip:after {
+    content: ' ';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 10px;
+    border-style: solid;
+    border-color: white transparent transparent transparent;
+}
+
+.dash-debug-menu__upgrade-button {
+    background-color: #a159ff0d;
+    border: 1px solid #864ad433;
+    color: #7f4bc4;
+    margin-left: 10px;
+}
+
+.dash-debug-menu__upgrade-button:hover {
+    background-color: #864ad433;
+}

@@ -6,13 +6,12 @@
     text-align: center;
     z-index: 9999;
     background-color: rgba(255, 255, 255, 0.9);
-
 }
-._dash-undo-redo>div {
+._dash-undo-redo > div {
     position: relative;
 }
 ._dash-undo-redo-link {
-    color: #0074D9;
+    color: #0074d9;
     cursor: pointer;
     margin-left: 10px;
     margin-right: 10px;

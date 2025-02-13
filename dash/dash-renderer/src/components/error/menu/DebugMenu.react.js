@@ -1,45 +1,75 @@
 import React, {Component} from 'react';
 import PropTypes from 'prop-types';
+import {concat} from 'ramda';
 
 import './DebugMenu.css';
 
-import BellIcon from '../icons/BellIcon.svg';
 import CheckIcon from '../icons/CheckIcon.svg';
 import ClockIcon from '../icons/ClockIcon.svg';
-import DebugIcon from '../icons/DebugIcon.svg';
+import ErrorIcon from '../icons/ErrorIcon.svg';
 import GraphIcon from '../icons/GraphIcon.svg';
 import OffIcon from '../icons/OffIcon.svg';
-
-import GlobalErrorOverlay from '../GlobalErrorOverlay.react';
+import {VersionInfo} from './VersionInfo.react';
 import {CallbackGraphContainer} from '../CallbackGraph/CallbackGraphContainer.react';
+import {FrontEndErrorContainer} from '../FrontEnd/FrontEndErrorContainer.react';
 
 const classes = (base, variant, variant2) =>
     `${base} ${base}--${variant}` + (variant2 ? ` ${base}--${variant2}` : '');
 
-const buttonFactory = (
-    enabled,
-    buttonVariant,
-    toggle,
-    _Icon,
-    iconVariant,
-    label
-) => (
-    <div className='dash-debug-menu__button-container'>
-        <div
-            className={classes(
-                'dash-debug-menu__button',
-                buttonVariant,
-                enabled && 'enabled'
-            )}
-            onClick={toggle}
-        >
-            <_Icon className={classes('dash-debug-menu__icon', iconVariant)} />
-            {label ? (
-                <label className='dash-debug-menu__button-label'>{label}</label>
-            ) : null}
+const MenuContent = ({
+    hotReload,
+    connected,
+    popup,
+    toggleErrors,
+    errCount,
+    toggleCallbackGraph,
+    config
+}) => {
+    const _StatusIcon = hotReload
+        ? connected
+            ? CheckIcon
+            : OffIcon
+        : ClockIcon;
+
+    return (
+        <div className='dash-debug-menu__content'>
+            <button
+                onClick={toggleErrors}
+                className={
+                    (popup == 'errors'
+                        ? 'dash-debug-menu__button--selected'
+                        : null) + ' dash-debug-menu__button'
+                }
+            >
+                <ErrorIcon className='dash-debug-menu__icon' />
+                Errors
+                {errCount > 0 ? (
+                    <span className='dash-debug-menu__error-count'>
+                        {errCount}
+                    </span>
+                ) : null}
+            </button>
+            <button
+                onClick={toggleCallbackGraph}
+                className={
+                    (popup == 'callbackGraph'
+                        ? 'dash-debug-menu__button--selected'
+                        : '') + ' dash-debug-menu__button'
+                }
+            >
+                <GraphIcon className='dash-debug-menu__icon' />
+                Callbacks
+            </button>
+            <div className='dash-debug-menu__divider' />
+            <VersionInfo config={config} />
+            <div className='dash-debug-menu__divider' />
+            <div className='dash-debug-menu__status'>
+                Server
+                <_StatusIcon className='dash-debug-menu__icon' />
+            </div>
         </div>
-    </div>
-);
+    );
+};
 
 class DebugMenu extends Component {
     constructor(props) {
@@ -47,110 +77,62 @@ class DebugMenu extends Component {
 
         this.state = {
             opened: false,
-            callbackGraphOpened: false,
-            errorsOpened: true
+            popup: 'errors'
         };
     }
-    render() {
-        const {opened, errorsOpened, callbackGraphOpened} = this.state;
-        const {error, hotReload} = this.props;
 
+    render() {
+        const {popup} = this.state;
+        const {error, hotReload, config} = this.props;
         const errCount = error.frontEnd.length + error.backEnd.length;
         const connected = error.backEndConnected;
 
         const toggleErrors = () => {
-            this.setState({errorsOpened: !errorsOpened});
+            this.setState({popup: popup == 'errors' ? null : 'errors'});
         };
 
-        const status = hotReload
-            ? connected
-                ? 'available'
-                : 'unavailable'
-            : 'cold';
-        const _StatusIcon = hotReload
-            ? connected
-                ? CheckIcon
-                : OffIcon
-            : ClockIcon;
+        const toggleCallbackGraph = () => {
+            this.setState({
+                popup: popup == 'callbackGraph' ? null : 'callbackGraph'
+            });
+        };
 
-        const menuContent = opened ? (
-            <div className='dash-debug-menu__content'>
-                {callbackGraphOpened ? <CallbackGraphContainer /> : null}
-                {buttonFactory(
-                    callbackGraphOpened,
-                    'callbacks',
-                    () => {
-                        this.setState({
-                            callbackGraphOpened: !callbackGraphOpened
-                        });
-                    },
-                    GraphIcon,
-                    'graph',
-                    'Callbacks'
-                )}
-                {buttonFactory(
-                    errorsOpened,
-                    'errors',
-                    toggleErrors,
-                    BellIcon,
-                    'bell',
-                    errCount + ' Error' + (errCount === 1 ? '' : 's')
-                )}
-                {buttonFactory(
-                    false,
-                    status,
-                    null,
-                    _StatusIcon,
-                    'indicator',
-                    'Server'
-                )}
+        const errors = concat(error.frontEnd, error.backEnd);
+
+        const popupContent = (
+            <div className='dash-debug-menu__popup'>
+                {popup == 'callbackGraph' ? (
+                    <CallbackGraphContainer />
+                ) : undefined}
+                {popup == 'errors' && errCount > 0 ? (
+                    <FrontEndErrorContainer
+                        clickHandler={toggleErrors}
+                        errors={errors}
+                        connected={error.backEndConnected}
+                    />
+                ) : undefined}
             </div>
-        ) : (
-            <div className='dash-debug-menu__content' />
         );
 
-        const alertsLabel =
-            (errCount || !connected) && !opened ? (
-                <div className='dash-debug-alert-label'>
-                    <div className='dash-debug-alert' onClick={toggleErrors}>
-                        {errCount ? (
-                            <div className='dash-debug-error-count'>
-                                {'🛑 ' + errCount}
-                            </div>
-                        ) : null}
-                        {connected ? null : (
-                            <div className='dash-debug-disconnected'>🚫</div>
-                        )}
-                    </div>
-                </div>
-            ) : null;
-
-        const openVariant = opened ? 'open' : 'closed';
+        const menuContent = (
+            <MenuContent
+                popup={popup}
+                errCount={errCount}
+                toggleErrors={toggleErrors}
+                toggleCallbackGraph={toggleCallbackGraph}
+                config={config}
+                hotReload={hotReload}
+                connected={connected}
+            />
+        );
 
         return (
             <div>
-                {alertsLabel}
-                <div className={classes('dash-debug-menu__outer', openVariant)}>
+                <div className={classes('dash-debug-menu__outer')}>
+                    {popupContent}
                     {menuContent}
                 </div>
-                <div
-                    className={classes('dash-debug-menu', openVariant)}
-                    onClick={() => {
-                        this.setState({opened: !opened});
-                    }}
-                >
-                    <DebugIcon
-                        className={classes('dash-debug-menu__icon', 'debug')}
-                    />
-                </div>
-                <GlobalErrorOverlay
-                    error={error}
-                    visible={errCount > 0}
-                    errorsOpened={errorsOpened}
-                    clickHandler={toggleErrors}
-                >
-                    {this.props.children}
-                </GlobalErrorOverlay>
+                {this.props.children}
             </div>
         );
     }
@@ -159,7 +141,8 @@ class DebugMenu extends Component {
 DebugMenu.propTypes = {
     children: PropTypes.object,
     error: PropTypes.object,
-    hotReload: PropTypes.bool
+    hotReload: PropTypes.bool,
+    config: PropTypes.object
 };
 
 export {DebugMenu};

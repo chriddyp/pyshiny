@@ -1,16 +1,15 @@
 .dash-callback-dag--container {
     border-radius: 4px;
-    position: fixed;
-    bottom: 165px;
-    right: 16px;
     width: 80vw;
-    height: calc(100vh - 180px);
+    position: relative;
+    height: calc(100vh - 75px);
     overflow: hidden;
     box-sizing: border-box;
     background: #ffffff;
     display: inline-block;
     /* shadow-1 */
-    box-shadow: 0px 6px 16px rgba(80, 103, 132, 0.165),
+    box-shadow:
+        0px 6px 16px rgba(80, 103, 132, 0.165),
         0px 2px 6px rgba(80, 103, 132, 0.12),
         0px 0px 1px rgba(80, 103, 132, 0.32);
 }
@@ -25,9 +24,9 @@
     max-height: 50%;
     overflow: auto;
     box-sizing: border-box;
-    background: rgba(255,255,255,0.9);
+    background: rgba(255, 255, 255, 0.9);
     border: 2px solid #ccc;
-    font-family: "Arial", sans-serif;
+    font-family: 'Arial', sans-serif;
 }
 
 .dash-callback-dag--message {
@@ -37,11 +36,11 @@
     align-items: center;
     height: 100%;
     line-height: 2em;
-    font-family: "Arial", sans-serif;
+    font-family: 'Arial', sans-serif;
 }
 
 .dash-callback-dag--layoutSelector {
     position: absolute;
-    top: 10px;
-    right: 10px;
+    top: 3px;
+    right: 3px;
 }

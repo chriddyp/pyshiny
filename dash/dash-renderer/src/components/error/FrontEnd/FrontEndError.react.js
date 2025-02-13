@@ -1,6 +1,6 @@
 import {connect} from 'react-redux';
 import './FrontEndError.css';
-import {Component} from 'react';
+import {Component, useRef, useState, useEffect} from 'react';
 import CollapseIcon from '../icons/CollapseIcon.svg';
 import PropTypes from 'prop-types';
 import '../Percy.css';
@@ -27,11 +27,10 @@ class FrontEndError extends Component {
         /* eslint-disable no-inline-comments */
         const errorHeader = (
             <div
-                className='dash-fe-error-top test-devtools-error-toggle'
+                className='dash-fe-error-item test-devtools-error-toggle'
                 onClick={() => this.setState({collapsed: !collapsed})}
             >
                 <span className='dash-fe-error-top__group'>
-                    ⛑️
                     <span className='dash-fe-error__title'>
                         {e.error.message || 'Error'}
                     </span>
@@ -56,17 +55,67 @@ class FrontEndError extends Component {
                 </span>
             </div>
         );
-        /* eslint-enable no-inline-comments */
 
-        return collapsed ? (
-            <div className='dash-error-card__list-item'>{errorHeader}</div>
-        ) : (
+        return (
             <div className={cardClasses}>
                 {errorHeader}
-                <ErrorContent error={e.error} />
+                {!collapsed && <ErrorContent error={e.error} />}
             </div>
         );
     }
+}
+
+function BackendError({error, base}) {
+    const iframeRef = useRef(null);
+    const [height, setHeight] = useState('500px'); // Default height
+
+    useEffect(() => {
+        const handleMessage = event => {
+            if (
+                event.data &&
+                typeof event.data === 'object' &&
+                event.data.type === 'IFRAME_HEIGHT'
+            ) {
+                setHeight(`${event.data.height}px`);
+            }
+        };
+
+        window.addEventListener('message', handleMessage);
+        return () => window.removeEventListener('message', handleMessage);
+    }, []);
+
+    return (
+        <iframe
+            ref={iframeRef}
+            srcDoc={error.html
+                .replace(
+                    '</head>',
+                    `<style type="text/css">${werkzeugCss}</style>
+                    <script>
+  function sendHeight() {
+    const height = document.body.scrollHeight;
+    window.parent.postMessage({ type: "IFRAME_HEIGHT", height }, "*");
+  }
+
+  window.addEventListener("load", sendHeight);
+  window.addEventListener("resize", sendHeight);
+  window.addEventListener("click", sendHeight);
+</script></head>`
+                )
+                .replace('="?__debugger__', `="${base}?__debugger__`)}
+            style={{
+                /*
+                 * 67px of padding and margin between this
+                 * iframe and the parent container.
+                 * 67 was determined manually in the
+                 * browser's dev tools.
+                 */
+                width: 'calc(600px - 67px)',
+                border: 'none',
+                height: height
+            }}
+        />
+    );
 }
 
 const MAX_MESSAGE_LENGTH = 40;
@@ -115,32 +164,10 @@ function UnconnectedErrorContent({error, base}) {
                 <div className='dash-be-error__st'>
                     <div className='dash-backend-error'>
                         {/* Embed werkzeug debugger in an iframe to prevent
-                        CSS leaking - werkzeug HTML includes a bunch
-                        of CSS on base html elements like `<body/>`
-                      */}
-
-                        <iframe
-                            srcDoc={error.html
-                                .replace(
-                                    '</head>',
-                                    `<style type="text/css">${werkzeugCss}</style></head>`
-                                )
-                                .replace(
-                                    '="?__debugger__',
-                                    `="${base}?__debugger__`
-                                )}
-                            style={{
-                                /*
-                                 * 67px of padding and margin between this
-                                 * iframe and the parent container.
-                                 * 67 was determined manually in the
-                                 * browser's dev tools.
-                                 */
-                                width: 'calc(600px - 67px)',
-                                height: '75vh',
-                                border: 'none'
-                            }}
-                        />
+                            CSS leaking - werkzeug HTML includes a bunch
+                            of CSS on base html elements like `<body/>`
+                        */}
+                        <BackendError error={error} base={base} />
                     </div>
                 </div>
             ) : (

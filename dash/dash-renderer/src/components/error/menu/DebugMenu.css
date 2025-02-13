@@ -17,31 +17,107 @@
     transform: rotate(-180deg);
 }
 
-.dash-debug-menu:hover {
-    background-color: #108de4;
+.dash-debug-menu__popup {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    bottom: 100%;
+    right: 0;
+    gap: 8px;
+    max-height: calc(100vh - 75px);
+    justify-content: flex-end;
 }
 
-.dash-debug-menu__icon {
-    width: auto;
+.dash-debug-menu__version-opt-out {
+    display: flex;
+    width: 426px;
+    padding: 16px;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 24, 102, 0.1);
+    background: #fff;
+    align-self: flex-end;
+    position: relative;
+    /* Shadow/Small */
+    box-shadow:
+        0px 0.7px 1.4px 0px rgba(0, 0, 0, 0.07),
+        0px 1.9px 4px 0px rgba(0, 0, 0, 0.05),
+        0px 4.5px 10px 0px rgba(0, 0, 0, 0.05);
+}
+
+.dash-debug-menu__version-opt-out__text {
+    display: inline-block;
+}
+
+.dash-debug-menu__version-opt-out__text a {
+    color: #7f4bc4;
+    text-decoration: none;
+}
+
+.dash-debug-menu__version-opt-out__text span {
+    margin-right: 5px;
+}
+
+.dash-debug-menu__version-opt-out button {
+    display: flex;
     height: 24px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    border-radius: 4px;
+    cursor: pointer;
+    line-height: 18px;
+    padding: 16px 12px;
+}
+
+.dash-debug-menu__version-opt-out__buttons-container {
+    display: flex;
+    gap: 8px;
+    align-self: stretch;
+    justify-content: center;
+    padding-top: 16px;
+    margin-top: 16px;
+    border-top: 1px solid rgba(0, 24, 102, 0.1);
+}
+
+.dash-debug-menu__version-opt-out__button-primary {
+    border: none;
+    color: #fff;
+    background: #7f4bc4;
+}
+
+.dash-debug-menu__version-opt-out__button-secondary {
+    background: rgba(161, 89, 255, 0.05);
+    color: #7f4bc4;
+    border: 1px solid rgba(134, 74, 212, 0.8);
+}
+
+.dash-debug-menu:hover {
+    background-color: #108de4;
 }
 
 .dash-debug-menu__outer {
     transition: 0.3s;
     box-sizing: border-box;
     position: fixed;
-    bottom: 27px;
-    right: 27px;
+    bottom: 8px;
+    right: 8px;
     display: flex;
+    flex-direction: column;
+    font-family: Verdana;
+    font-size: 14px;
     justify-content: center;
     align-items: center;
     z-index: 10000;
-    height: 80px;
-    border-radius: 40px;
-    padding: 5px 78px 5px 5px;
-    background-color: #fff;
-    box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.25),
-        0px 1px 3px rgba(162, 177, 198, 0.32);
+    border-radius: 5px;
+    padding: 5px;
+    background-color: #f5f6fa;
+    box-shadow:
+        0px 0.8px 0.8px 0px rgba(0, 0, 0, 0.04),
+        0px 2.3px 2px 0px rgba(0, 0, 0, 0.03);
+    border: 1px solid rgba(0, 24, 102, 0.1);
 }
 .dash-debug-menu__outer--closed {
     height: 60px;
@@ -51,98 +127,68 @@
     padding: 0;
 }
 
-.dash-debug-menu__content {
-    display: flex;
-    width: 100%;
-    height: 100%;
-}
-
-.dash-debug-menu__button-container {
+.dash-debug-menu__upgrade-tooltip {
+    position: absolute;
+    bottom: calc(100% + 12px);
+    right: 0;
     display: flex;
     flex-direction: column;
-    justify-content: center;
+    background-color: white;
+    border-radius: 3px;
+    border: 1px solid #0018661a;
+    padding: 11px;
+    box-shadow: 0px 0px 14px 5px #00000012;
+    z-index: 1200;
+}
+
+.dash-debug-menu__status {
+    display: flex;
     align-items: center;
-    width: 74px;
+}
+.dash-debug-menu__icon {
+    margin: 0 5px;
+}
+
+.dash-debug-menu__content {
+    display: flex;
+    align-items: stretch;
+    margin: 10px;
+}
+
+.dash-debug-menu__version {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.dash-debug-menu__divider {
+    width: 1.5px;
+    height: 26px;
+    margin: 0px 13px;
+    background-color: #0015594d;
 }
 
 .dash-debug-menu__button {
-    position: relative;
-    background-color: #B9C2CE;
-    border-radius: 100%;
-    width: 64px;
-    height: 64px;
-    font-size: 10px;
+    background: none;
+    border: none;
+    box-shadow: 0 1px #d3dae6;
     display: flex;
-    flex-direction: column;
     justify-content: center;
     align-items: center;
     transition: background-color 0.2s;
-    color: #fff;
     cursor: pointer;
+    font-weight: bold;
 }
 .dash-debug-menu__button:hover {
-    background-color: #a1a9b5;
-}
-.dash-debug-menu__button--enabled {
-    background-color: #00CC96;
-}
-.dash-debug-menu__button.dash-debug-menu__button--enabled:hover {
-    background-color: #03bb8a;
+    color: black;
 }
 
-.dash-debug-menu__button-label {
-    cursor: inherit;
+.dash-debug-menu__button.dash-debug-menu__button--selected {
+    color: #7f4bc4;
+    box-shadow: 0 2px #0071c2;
 }
-
-.dash-debug-menu__button::before {
-    visibility: hidden;
-    pointer-events: none;
-    position: absolute;
-    box-sizing: border-box;
-    bottom: 110%;
-    left: 50%;
-    margin-left: -60px;
-    padding: 7px;
-    width: 120px;
-    border-radius: 3px;
-    background-color: rgba(68,68,68,0.7);
-    color: #fff;
-    text-align: center;
-    font-size: 10px;
-    line-height: 1.2;
-}
-.dash-debug-menu__button:hover::before {
-    visibility: visible;
-}
-.dash-debug-menu__button--callbacks::before {
-    content: "Toggle Callback Graph";
-}
-.dash-debug-menu__button--errors::before {
-    content: "Toggle Errors";
-}
-.dash-debug-menu__button--available,
-.dash-debug-menu__button--available:hover {
-    background-color: #00CC96;
-    cursor: default;
-}
-.dash-debug-menu__button--available::before {
-    content: "Server Available";
-}
-.dash-debug-menu__button--unavailable,
-.dash-debug-menu__button--unavailable:hover {
-    background-color: #F1564E;
-    cursor: default;
-}
-.dash-debug-menu__button--unavailable::before {
-    content: "Server Unavailable. Check if the process has halted or crashed.";
-}
-.dash-debug-menu__button--cold,
-.dash-debug-menu__button--cold:hover {
-    background-color: #FDDA68;
-    cursor: default;
-}
-.dash-debug-menu__button--cold::before {
-    content: "Hot Reload Disabled";
+.dash-debug-menu__button.dash-debug-menu__button--selected:hover {
+    color: #5806c4;
 }
 
 .dash-debug-alert {
@@ -158,7 +204,8 @@
     right: 29px;
     z-index: 10002;
     cursor: pointer;
-    box-shadow: 0px 0px 1px rgba(0, 0, 0, 0.25),
+    box-shadow:
+        0px 0px 1px rgba(0, 0, 0, 0.25),
         0px 1px 3px rgba(162, 177, 198, 0.32);
     border-radius: 32px;
     background-color: white;
@@ -166,9 +213,13 @@
     color: rgb(50, 50, 50);
 }
 
-.dash-debug-error-count {
-    display: block;
-    margin: 0 3px;
+.dash-debug-menu__error-count {
+    font-size: 12px;
+    color: #fff;
+    background-color: #c73a3a;
+    padding: 3px 5px;
+    border-radius: 3px;
+    margin: 0 5px;
 }
 
 .dash-debug-disconnected {
