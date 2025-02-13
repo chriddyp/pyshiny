@@ -37,21 +37,11 @@ from ._utils import (
 from . import _validate
 from .long_callback.managers import BaseLongCallbackManager
 from ._callback_context import context_value
+from ._no_update import NoUpdate
 
 
 def _invoke_callback(func, *args, **kwargs):  # used to mark the frame for the debugger
     return func(*args, **kwargs)  # %% callback invoked %%
-
-
-class NoUpdate:
-    def to_plotly_json(self):  # pylint: disable=no-self-use
-        return {"_dash_no_update": "_dash_no_update"}
-
-    @staticmethod
-    def is_no_update(obj):
-        return isinstance(obj, NoUpdate) or (
-            isinstance(obj, dict) and obj == {"_dash_no_update": "_dash_no_update"}
-        )
 
 
 GLOBAL_CALLBACK_LIST = []

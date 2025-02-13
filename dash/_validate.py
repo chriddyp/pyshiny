@@ -6,6 +6,7 @@ from keyword import iskeyword
 import flask
 
 from ._grouping import grouping_len, map_grouping
+from ._no_update import NoUpdate
 from .development.base_component import Component
 from . import exceptions
 from ._utils import (
@@ -211,8 +212,8 @@ def validate_multi_return(output_lists, output_values, callback_id):
 
 
 def fail_callback_output(output_value, output):
-    valid_children = (str, int, float, type(None), Component)
-    valid_props = (str, int, float, type(None), tuple, MutableSequence)
+    valid_children = (str, int, float, type(None), Component, NoUpdate)
+    valid_props = (str, int, float, type(None), tuple, MutableSequence, NoUpdate)
 
     def _raise_invalid(bad_val, outer_val, path, index=None, toplevel=False):
         bad_type = type(bad_val).__name__
