@@ -48,6 +48,7 @@
   },
   "devDependencies": {
     "@lerna/filter-options": "^6.4.1",
+    "@types/react": "^19.0.8",
     "husky": "8.0.3",
     "lerna": "^6.6.2"
   },

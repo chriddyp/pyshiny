@@ -583,10 +583,10 @@ def map_js_to_py_types_prop_types(type_object, indent_num):
         any=lambda: "boolean | number | string | dict | list",
         element=lambda: "dash component",
         node=lambda: "a list of or a singular dash component, string or number",
-        # React's PropTypes.oneOf
+        # React's PropTypes.oneOf, TypeScript enum & const enum, or TypeScript string literal union
         enum=lambda: (
             "a value equal to: "
-            + ", ".join(str(t["value"]) for t in type_object["value"])
+            + ", ".join(str(t["value"]) for t in type_object["value"] if t.get("value"))
         ),
         # React's PropTypes.oneOfType
         union=lambda: " | ".join(
