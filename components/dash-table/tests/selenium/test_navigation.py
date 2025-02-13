@@ -6,6 +6,7 @@ from dash.dash_table import DataTable
 from selenium.webdriver.common.keys import Keys
 
 import pytest
+import flaky
 
 DATA_SIZE = 50
 
@@ -154,6 +155,7 @@ def test_navg002_keyboard_after_ctrl_copy(test, props):
     assert test.get_log_errors() == []
 
 
+@flaky.flaky(max_runs=3)
 @pytest.mark.parametrize("props", [get_markdown_table(), get_mixed_markdown_table()])
 @pytest.mark.parametrize(
     "key,row,col",

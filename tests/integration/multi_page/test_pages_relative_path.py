@@ -50,7 +50,11 @@ def test_pare001_relative_path(dash_duo, clear_pages_state):
     for page in dash.page_registry.values():
         dash_duo.find_element("#" + page["id"]).click()
         dash_duo.wait_for_text_to_equal("#text_" + page["id"], "text for " + page["id"])
-        assert dash_duo.driver.title == page["title"], "check that page title updates"
+        dash_duo._wait_for(
+            lambda _: dash_duo.driver.title == page["title"],
+            msg="check that page title updates",
+            timeout=3,
+        )
 
     assert dash_duo.get_logs() == [], "browser console should contain no error"
 

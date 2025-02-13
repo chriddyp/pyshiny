@@ -61,6 +61,7 @@ __all__ = [
     "Input",
     "Output",
     "State",
+    "clientside_callback",
     "ClientsideFunction",
     "MATCH",
     "ALLSMALLER",
@@ -88,4 +89,5 @@ __all__ = [
     "Patch",
     "jupyter_dash",
     "ctx",
+    "hooks",
 ]

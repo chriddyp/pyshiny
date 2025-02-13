@@ -10,7 +10,7 @@ import {
     calcStep,
     setUndefined,
 } from '../utils/computeSliderMarkers';
-import {propTypes, defaultProps} from '../components/RangeSlider.react';
+import {propTypes} from '../components/RangeSlider.react';
 import {
     formatSliderTooltip,
     transformSliderTooltip,
@@ -152,4 +152,3 @@ export default class RangeSlider extends Component {
 }
 
 RangeSlider.propTypes = propTypes;
-RangeSlider.defaultProps = defaultProps;

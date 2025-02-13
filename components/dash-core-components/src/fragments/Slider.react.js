@@ -10,7 +10,7 @@ import {
     calcStep,
     setUndefined,
 } from '../utils/computeSliderMarkers';
-import {propTypes, defaultProps} from '../components/Slider.react';
+import {propTypes} from '../components/Slider.react';
 import {
     formatSliderTooltip,
     transformSliderTooltip,
@@ -152,4 +152,3 @@ export default class Slider extends Component {
 }
 
 Slider.propTypes = propTypes;
-Slider.defaultProps = defaultProps;

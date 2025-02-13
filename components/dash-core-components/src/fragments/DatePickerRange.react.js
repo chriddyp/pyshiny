@@ -3,7 +3,7 @@ import {DateRangePicker} from 'react-dates';
 import React, {Component} from 'react';
 import uniqid from 'uniqid';
 
-import {propTypes, defaultProps} from '../components/DatePickerRange.react';
+import {propTypes} from '../components/DatePickerRange.react';
 import convertToMoment from '../utils/convertToMoment';
 import LoadingElement from '../utils/LoadingElement';
 
@@ -219,4 +219,3 @@ export default class DatePickerRange extends Component {
 }
 
 DatePickerRange.propTypes = propTypes;
-DatePickerRange.defaultProps = defaultProps;

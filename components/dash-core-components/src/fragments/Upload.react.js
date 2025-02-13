@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import Dropzone from 'react-dropzone';
 
-import {propTypes, defaultProps} from '../components/Upload.react';
+import {propTypes} from '../components/Upload.react';
 import LoadingElement from '../utils/LoadingElement';
 
 export default class Upload extends Component {
@@ -91,4 +91,3 @@ export default class Upload extends Component {
 }
 
 Upload.propTypes = propTypes;
-Upload.defaultProps = defaultProps;

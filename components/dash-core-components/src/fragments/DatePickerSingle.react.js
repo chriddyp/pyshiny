@@ -4,7 +4,7 @@ import {SingleDatePicker} from 'react-dates';
 import moment from 'moment';
 import React, {Component} from 'react';
 
-import {propTypes, defaultProps} from '../components/DatePickerSingle.react';
+import {propTypes} from '../components/DatePickerSingle.react';
 import convertToMoment from '../utils/convertToMoment';
 import LoadingElement from '../utils/LoadingElement';
 
@@ -155,4 +155,3 @@ export default class DatePickerSingle extends Component {
 }
 
 DatePickerSingle.propTypes = propTypes;
-DatePickerSingle.defaultProps = defaultProps;

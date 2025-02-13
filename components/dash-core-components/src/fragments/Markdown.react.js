@@ -6,7 +6,7 @@ import RemarkMath from 'remark-math';
 
 import Math from './Math.react';
 import MarkdownHighlighter from '../utils/MarkdownHighlighter';
-import {propTypes, defaultProps} from '../components/Markdown.react';
+import {propTypes} from '../components/Markdown.react';
 
 import DccLink from './../components/Link.react';
 import LoadingElement from '../utils/LoadingElement';
@@ -187,4 +187,3 @@ export default class DashMarkdown extends Component {
 }
 
 DashMarkdown.propTypes = propTypes;
-DashMarkdown.defaultProps = defaultProps;
