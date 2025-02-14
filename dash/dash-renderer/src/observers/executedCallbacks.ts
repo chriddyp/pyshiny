@@ -50,19 +50,22 @@ const observer: IStoreObserverDefinition<IStoreState> = {
             if (!itempath) {
                 return false;
             }
-
             // This is a callback-generated update.
-            // Check if this invalidates existing persisted prop values,
-            // or if persistence changed, whether this updates other props.
-            updatedProps = prunePersistence(
-                path(itempath, layout),
-                updatedProps,
-                dispatch
-            );
+            let props = updatedProps;
 
-            // In case the update contains whole components, see if any of
-            // those components have props to update to persist user edits.
-            const {props} = applyPersistence({props: updatedProps}, dispatch);
+            if (id === '_pages_content') {
+                // Check if this invalidates existing persisted prop values,
+                // or if persistence changed, whether this updates other props.
+                updatedProps = prunePersistence(
+                    path(itempath, layout),
+                    updatedProps,
+                    dispatch
+                );
+
+                // In case the update contains whole components, see if any of
+                // those components have props to update to persist user edits.
+                props = applyPersistence({props: updatedProps}, dispatch).props;
+            }
 
             dispatch(
                 updateProps({
